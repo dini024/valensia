@@ -1,0 +1,11 @@
+<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CompChem Lab</title><link rel="stylesheet" href="assets/css/style.css"><script src="assets/js/api.js"></script></head><body>
+<h1>Computational Chemistry Lab</h1><nav><a href="index.html">Dashboard</a><a href="course.html">Course</a><a href="molecular-builder.html">Molecular Builder</a><a href="input-builder.html">Input Builder</a><a href="results-analyzer.html">Results</a><a href="orca-docker.html">ORCA Docker</a></nav>
+<div class="grid">
+<div class="card"><h3><a href="course.html">Course</a></h3>Modul interaktif DFT dan computational chemistry.</div>
+<div class="card"><h3><a href="molecular-builder.html">Molecular Builder</a></h3>SMILES → 2D → 3D.</div>
+<div class="card"><h3><a href="input-builder.html">Input Builder</a></h3>Input ORCA dan Gaussian dari struktur builder.</div>
+<div class="card"><h3><a href="results-analyzer.html">Results Analyzer</a></h3>Geometri, frekuensi, HOMO-LUMO, TD-DFT dari output ORCA/Gaussian.</div>
+<div class="card"><h3><a href="orca-docker.html">ORCA Docker Workbench</a></h3>Kirim job ke Docker lokal (MacBook) atau SLURM BRIN, lihat hasil.</div></div>
+<div class="card"><h3>Koneksi backend</h3>URL <input id="u" size="30"> Token <input id="t" type="password" size="20"> <button onclick="sv()">Simpan &amp; tes</button> <span id="s"></span><br><small>Default: local-agent di http://127.0.0.1:8765. Tersimpan hanya di browser Anda.</small></div>
+<script>const q=i=>document.getElementById(i);q('u').value=API.base();q('t').value=API.tok();
+async function sv(){localStorage.cc_api=q('u').value.trim().replace(/\/$/,'');localStorage.cc_tok=q('t').value;try{const j=await(await API.f('/api/health')).json();q('s').innerHTML='<span class="ok">Terhubung. Backend: '+j.backends.join(', ')+'</span>'}catch(e){q('s').innerHTML='<span class="bad">Gagal: '+e.message+'</span>'}}</script></body></html>

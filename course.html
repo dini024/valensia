@@ -1,0 +1,144 @@
+<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Course · Computational Chemistry & DFT</title><link rel="stylesheet" href="assets/css/style.css">
+<style>header.h{background:linear-gradient(120deg,#1a6fd4,#6a3fd0);color:#fff;border-radius:12px;padding:22px;margin:10px 0}header.h h1{margin:0 0 6px}#toc{position:sticky;top:0;background:var(--bg);padding:6px 0;border-bottom:1px solid var(--bd);z-index:5;font-size:14px}#toc a{margin-right:10px}
+.tag{font-size:12px;padding:1px 6px;border-radius:8px;background:#1a9a4a;color:#fff}.tag.u{background:#b8860b}.flow{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.flow div{border:1px solid var(--ac);border-radius:8px;padding:6px 10px}pre{background:var(--card);padding:8px;overflow:auto;font-size:13px}.row{display:flex;flex-wrap:wrap;gap:12px}.row>*{flex:1;min-width:300px}h2 small{font-weight:400;color:#888}</style></head><body>
+<header class="h"><h1>Dari Persamaan Kuantum ke Prediksi Molekul</h1>Kursus interaktif computational chemistry dan Density Functional Theory (DFT): teori → visual → analisis hasil ORCA/Gaussian.</header>
+<nav><a href="index.html">Dashboard</a><a href="course.html">Course</a><a href="molecular-builder.html">Molecular Builder</a><a href="input-builder.html">Input Builder</a><a href="results-analyzer.html">Results</a><a href="orca-docker.html">ORCA Docker</a></nav>
+<div id="toc"><a href="#s1">1 Mengapa</a><a href="#s2">2 Schrödinger</a><a href="#s3">3 Dimensi</a><a href="#s4">4 DFT</a><a href="#s5">5 Fungsional</a><a href="#s6">6 Basis set</a><a href="#s7">7 SCF</a><a href="#s8">8 Optimasi</a><a href="#s9">9 Properti</a><a href="#s10">10 Workflow</a><a href="#s11">11 Kuis</a><a href="#s12">12 Pustaka</a></div>
+
+<div class="card" id="s1"><h2>1 · Mengapa simulasi komputasi penting sekarang?</h2>
+<div class="flow"><div>Eksperimen<br><small>ukur / amati</small></div>↔<div>Komputasi<br><small>model / prediksi</small></div>→<div>Wawasan tervalidasi<br><small>mekanisme · sifat · desain</small></div></div>
+<ul><li><b>Penyaringan sebelum sintesis:</b> kandidat dye, bahan penyimpan H₂, atau molekul fotokromik disaring dengan DFT sebelum dibuat di laboratorium.</li>
+<li><b>Hasil bisa diuji kehandalannya:</b> Lejaeghere dkk. (<i>Science</i> 2016) membandingkan 15 kode DFT padatan dengan 40 potensial/basis; kode dan pseudopotensial modern sepakat dengan selisih sebanding perbedaan antar eksperimen presisi tinggi.</li>
+<li><b>Skala dan AI (2025):</b> dataset Open Molecules 2025 (OMol25) berisi lebih dari 100 juta perhitungan DFT pada level ωB97M-V/def2-TZVPD, dikerjakan dengan ORCA 6.0.0, untuk melatih machine-learning interatomic potentials sebagai pengganti DFT yang jauh lebih cepat. Data DFT kini menjadi bahan bakar model AI untuk kimia.</li>
+<li><b>Pengakuan:</b> Nobel Kimia 1998 (Kohn dan Pople) dan 2013 (Karplus, Levitt, Warshel).</li></ul>
+<small>Model bukan pengganti eksperimen: ia menghasilkan hipotesis yang harus divalidasi, dengan metode dan ketidakpastian yang dilaporkan.</small></div>
+
+<div class="card" id="s2"><h2>2 · Persamaan Schrödinger <small>atom hidrogen: satu-satunya kasus yang bisa diselesaikan eksak</small></h2>
+<p>ĤΨ = EΨ, dengan Ĥ = T̂ + V̂<sub>ne</sub> + V̂<sub>ee</sub> + V̂<sub>nn</sub>. Untuk satu elektron solusinya analitik. Pilih orbital dan lihat peluang menemukan elektron pada jarak r dari inti (puncak = kulit; lembah nol = node radial).</p>
+<span id="orbs"></span> rentang r: <input type="range" id="rmax" min="5" max="30" value="20"><canvas id="c_h" width="760" height="280"></canvas><p id="t_h"></p></div>
+
+<div class="card" id="s3"><h2>3 · Mengapa gagal untuk banyak elektron? <small>dinding eksponensial</small></h2>
+<p>Ψ(r₁,…,r<sub>N</sub>) bergantung pada 3N koordinat, dan suku V̂<sub>ee</sub> (1/|rᵢ−rⱼ|) mengikat semua elektron sehingga persamaan tidak bisa dipisah. Jika tiap dimensi disimpan dengan 10 titik grid, jumlah nilai = 10<sup>3N</sup>.</p>
+Jumlah elektron N: <input type="range" id="N" min="1" max="30" value="2"> <b id="Nv"></b><canvas id="c_d" width="760" height="300"></canvas><p id="t_d"></p>
+<p>Solusinya: <b>metode berbasis ρ(r)</b> yang selalu 3 dimensi, berapa pun N. Perkiraan jumlah atom di alam semesta teramati (~10⁸⁰) sudah terlampaui pada N≈27.</p></div>
+
+<div class="card" id="s4"><h2>4 · Ide DFT: dari Ψ ke ρ(r)</h2>
+<div class="row"><div><b>Hohenberg–Kohn (1964).</b> Kerapatan elektron keadaan dasar ρ(r) menentukan secara unik potensial eksternal dan seluruh sifat sistem: E = E[ρ].</div>
+<div><b>Kohn–Sham (1965).</b> Ganti sistem berinteraksi dengan sistem elektron tak berinteraksi yang ρ-nya sama:<br>E[ρ] = T<sub>s</sub>[ρ] + E<sub>ne</sub>[ρ] + J[ρ] + <b>E<sub>xc</sub>[ρ]</b></div></div>
+<p>Semua kerumitan kuantum (pertukaran + korelasi + koreksi energi kinetik) dikemas dalam E<sub>xc</sub>, yang <i>tidak diketahui eksak</i> dan harus dihampiri. Karena itu kualitas DFT ditentukan oleh pilihan fungsional.</p>
+<div class="flow"><div>1 · LDA</div>→<div>2 · GGA<br><small>PBE, BLYP</small></div>→<div>3 · meta-GGA<br><small>TPSS, M06-L</small></div>→<div>4 · Hibrida<br><small>B3LYP, PBE0, CAM-B3LYP, ωB97X-D</small></div>→<div>5 · Hibrida ganda<br><small>B2PLYP</small></div></div>
+<small>Tangga Jacob: naik = biasanya lebih akurat dan lebih mahal (skala formal GGA ~N³, hibrida ~N⁴, hibrida ganda ~N⁵; RI/COSX menurunkan biaya praktis).</small></div>
+
+<div class="card" id="s5"><h2>5 · Apa arti "GGA"? <small>faktor peningkatan pertukaran F<sub>x</sub>(s)</small></h2>
+<p>LDA hanya melihat nilai ρ (F<sub>x</sub>=1). GGA juga melihat gradien ρ lewat s. Bentuk PBE: F<sub>x</sub>=1+κ−κ/(1+μs²/κ). Geser μ dan κ dan perhatikan batas Lieb–Oxford (1.804).</p>
+μ: <input type="range" id="mu" min="0" max=".6" step=".005" value=".2195"> <b id="muv"></b> κ: <input type="range" id="ka" min=".2" max="1" step=".01" value=".804"> <b id="kav"></b>
+<canvas id="c_f" width="760" height="280"></canvas><p id="t_f"></p></div>
+
+<div class="card" id="s6"><h2>6 · Basis set <small>mengapa orbital Gaussian bisa meniru orbital Slater</small></h2>
+<p>Orbital sebenarnya (Slater, e<sup>−ζr</sup>) punya cusp di inti dan ekor eksponensial, tetapi integral dengan Gaussian (e<sup>−αr²</sup>) jauh lebih murah. Basis STO-<i>n</i>G menjumlahkan <i>n</i> Gaussian untuk meniru satu Slater 1s (H, ζ=1). Tambah <i>n</i> dan lihat kecocokannya, lalu aktifkan skala log untuk melihat ekornya.</p>
+n Gaussian: <input type="range" id="nG" min="1" max="3" value="3"> <b id="nGv"></b> <label><input type="checkbox" id="lg"> skala log</label><canvas id="c_b" width="760" height="280"></canvas>
+<p><b>Hierarki praktis:</b> minimal (STO-3G) → split-valence (6-31G, def2-SVP) → + polarisasi (6-31G(d), def2-TZVP) → + difus (6-311+G(d,p), aug-cc-pVDZ untuk anion/eksitasi) → basis lengkap.</p></div>
+
+<div class="card" id="s7"><h2>7 · Siklus SCF</h2>
+<div class="flow"><div>Tebakan ρ₀</div>→<div>Bangun V<sub>eff</sub><br><small>V<sub>ne</sub>+J+V<sub>xc</sub></small></div>→<div>Selesaikan Kohn–Sham</div>→<div>ρ baru</div>→<div>Mixing / DIIS</div>→<div>Konvergen?<br><small>ΔE, Δρ &lt; ambang</small></div>↺</div>
+<p>Model linear ilustratif: x<sub>n+1</sub> = x<sub>n</sub> + α(f(x<sub>n</sub>) − x<sub>n</sub>). α terlalu besar menyebabkan osilasi atau divergensi, α terlalu kecil membuat konvergen lambat.</p>
+α (mixing): <input type="range" id="al" min=".05" max="1" step=".05" value=".3"> <b id="alv"></b> ambang ΔE: <select id="thr"><option>1e-4</option><option selected>1e-6</option><option>1e-8</option></select> <button onclick="vS(true)">Animasikan SCF</button>
+<div class="row"><canvas id="c_s1" width="480" height="260"></canvas><canvas id="c_s2" width="480" height="260"></canvas></div><p id="t_s"></p>
+<small>Di program nyata: kenaikan level shift, damping, DIIS/ADIIS/KDIIS, atau SlowConv (ORCA) / scf=(xqc) (Gaussian) saat SCF sulit konvergen.</small></div>
+
+<div class="card" id="s8"><h2>8 · Optimasi geometri dan frekuensi <small>permukaan energi potensial</small></h2>
+<p>Optimasi bergerak menuruni gradien sampai gaya ≈ 0. Gradien nol tidak cukup: kelengkungan (Hessian) harus positif. Bila negatif, frekuensinya imajiner, yaitu titik pelana (TS), bukan minimum.</p>
+Permukaan: <select id="pt"><option value="m">Morse (minimum)</option><option value="t">Penghalang (titik pelana)</option></select> posisi x: <input type="range" id="px" step=".01"> <button onclick="opt()">Optimasi</button>
+<canvas id="c_p" width="760" height="280"></canvas><p id="t_p"></p></div>
+
+<div class="card" id="s9"><h2>9 · Dari orbital ke properti <small>kalkulator HOMO–LUMO dan spektrum</small></h2>
+<div class="row"><div>E<sub>HOMO</sub> (eV) <input type="number" id="eh" step=".01" value="-5.40" style="width:80px"> E<sub>LUMO</sub> (eV) <input type="number" id="el" step=".01" value="-2.30" style="width:80px"><canvas id="c_c" width="360" height="240"></canvas><div id="t_c"></div></div>
+<div>Eksitasi TD-DFT (λ nm, f; satu per baris):<textarea id="ex" rows="4">450 0.02
+330 0.85
+270 0.30</textarea>σ pita (eV): <input type="range" id="sg" min=".05" max=".8" step=".05" value=".3"> <b id="sgv"></b><canvas id="c_t" width="460" height="240"></canvas><small>ε(ν)=1.3063×10⁸·f/σ·exp(−((ν−ν₀)/σ)²), ν dalam cm⁻¹. Intensitas puncak bergantung pada σ yang Anda pilih.</small></div></div>
+<small>IP≈−E<sub>HOMO</sub>, EA≈−E<sub>LUMO</sub> (Koopmans, perkiraan; ΔSCF lebih akurat). Interpretasi gap Kohn–Sham bergantung fungsional: GGA cenderung meremehkan, hibrida lebih besar.</small></div>
+
+<div class="card" id="s10"><h2>10 · Workflow DFT dan contoh input</h2>
+<div class="flow"><div>1 · Model<br><small>fungsional, basis, muatan, spin, pelarut, dispersi</small></div>→<div>2 · SCF</div>→<div>3 · Optimasi + frekuensi<br><small>tanpa imajiner</small></div>→<div>4 · Properti<br><small>orbital, TD-DFT, termo</small></div>→<div>5 · Validasi<br><small>bandingkan eksperimen</small></div></div>
+<div class="row"><div><b>ORCA</b><pre>! B3LYP D3BJ def2-SVP Opt Freq CPCM(water) TightSCF
+%pal nprocs 8 end
+%maxcore 2000
+* xyz 0 1
+ (koordinat)
+*</pre></div><div><b>Gaussian</b><pre>%nprocshared=8
+%chk=mol.chk
+#p b3lyp/6-31g(d) opt freq
+ empiricaldispersion=gd3bj scrf=(solvent=water)
+
+judul
+
+0 1
+(koordinat)</pre></div></div>
+<p>Lanjut: <a href="molecular-builder.html">bangun struktur</a> → <a href="input-builder.html">susun input</a> → <a href="results-analyzer.html">analisis hasil</a>.</p></div>
+
+<div class="card" id="s11"><h2>11 · Kuis cepat</h2><div id="quiz"></div><button onclick="grade()">Periksa jawaban</button> <b id="score"></b></div>
+
+<div class="card" id="s12"><h2>12 · Pustaka</h2><p><span class="tag">terverifikasi</span> = DOI/arXiv dicek via web dalam penyusunan modul; <span class="tag u">cek ulang</span> = ditulis dari pengetahuan dan perlu dicek sebelum dikutip.</p><ul id="refs"></ul></div>
+
+<script>
+const $=id=>document.getElementById(id),COL=['#1a6fd4','#d33','#1a9a4a','#d08000'],lin=(a,b,n)=>Array.from({length:n},(_,i)=>a+(b-a)*i/(n-1));
+function plot(id,S,o={}){const c=$(id),g=c.getContext('2d'),W=c.width,H=c.height,m={l:56,r:12,t:12,b:36};g.clearRect(0,0,W,H);
+ const xs=S.flatMap(s=>s.x),ys=S.flatMap(s=>s.y),x0=o.x0??Math.min(...xs),x1=o.x1??Math.max(...xs),y0=o.y0??Math.min(...ys),y1=o.y1??Math.max(...ys);
+ const X=v=>m.l+(v-x0)/(x1-x0)*(W-m.l-m.r),Y=v=>H-m.b-(v-y0)/((y1-y0)||1)*(H-m.t-m.b),fg=getComputedStyle(document.body).color;
+ g.font='12px system-ui';g.strokeStyle=g.fillStyle=fg;g.globalAlpha=.35;g.strokeRect(m.l,m.t,W-m.l-m.r,H-m.t-m.b);g.globalAlpha=.8;
+ for(let i=0;i<=5;i++){const a=x0+(x1-x0)*i/5,b=y0+(y1-y0)*i/5;g.fillText(+a.toPrecision(3),X(a)-10,H-m.b+14);g.fillText(+b.toPrecision(4),2,Y(b)+4)}
+ g.fillText(o.xl||'',W/2-30,H-6);g.save();g.translate(12,H/2+30);g.rotate(-Math.PI/2);g.fillText(o.yl||'',0,0);g.restore();g.globalAlpha=1;
+ g.save();g.beginPath();g.rect(m.l,m.t,W-m.l-m.r,H-m.t-m.b);g.clip();
+ S.forEach((s,k)=>{g.strokeStyle=s.c||COL[k%4];g.lineWidth=2;g.setLineDash(s.d?[6,4]:[]);g.beginPath();s.x.forEach((v,i)=>i?g.lineTo(X(v),Y(s.y[i])):g.moveTo(X(v),Y(s.y[i])));g.stroke()});g.restore();g.setLineDash([]);
+ S.forEach((s,k)=>{g.fillStyle=s.c||COL[k%4];g.fillText(s.n||'',m.l+10,m.t+16+15*k)});
+ return{dot:(x,y,c)=>{g.fillStyle=c||'#d33';g.beginPath();g.arc(X(x),Y(y),5,0,7);g.fill()}}}
+// 2 hidrogen
+const RN={'1s':r=>2*Math.exp(-r),'2s':r=>(2-r)*Math.exp(-r/2)/(2*Math.SQRT2),'2p':r=>r*Math.exp(-r/2)/(2*Math.sqrt(6)),'3s':r=>2/(81*Math.sqrt(3))*(27-18*r+2*r*r)*Math.exp(-r/3),'3p':r=>8/(27*Math.sqrt(6))*r*(1-r/6)*Math.exp(-r/3),'3d':r=>4/(81*Math.sqrt(30))*r*r*Math.exp(-r/3)};
+$('orbs').innerHTML=Object.keys(RN).map((n,i)=>`<label><input type="checkbox" class="orb" value="${n}" ${i<3?'checked':''}> ${n}</label> `).join('');
+function vH(){const sel=[...document.querySelectorAll('.orb:checked')].map(e=>e.value),r=lin(0,+$('rmax').value,400);
+ plot('c_h',sel.map(n=>({n,x:r,y:r.map(v=>v*v*RN[n](v)**2)})),{xl:'r (a₀)',yl:'P(r)=r²R(r)²',y0:0});
+ $('t_h').textContent=sel.map(n=>n+': '+(+n[0]-1-'spd'.indexOf(n[1]))+' node radial, E = −1/(2n²)='+(-13.606/(n[0]*n[0])).toFixed(2)+' eV').join(' · ')}
+// 3 dimensi
+function vD(){const N=+$('N').value,x=lin(1,30,30);$('Nv').textContent=N;
+ plot('c_d',[{n:'Ψ: 10 titik/dimensi → 10^(3N) nilai',x,y:x.map(v=>3*v)},{n:'ρ(r): hanya 10³ nilai',x,y:x.map(_=>3)},{n:'≈ atom di alam semesta teramati (10⁸⁰)',x,y:x.map(_=>80),d:1,c:'#888'}],{xl:'jumlah elektron N',yl:'log₁₀(jumlah nilai)',y0:0}).dot(N,3*N);
+ $('t_d').textContent=`N=${N}: Ψ butuh 10^${3*N} nilai ≈ 10^${(3*N-11.1).toFixed(1)} TB (8 byte/nilai); ρ cukup 10³ nilai (≈8 KB).`}
+// 5 Fx
+function vF(){const mu=+$('mu').value,ka=+$('ka').value,s=lin(0,3,200),F=(m,k)=>s.map(v=>1+k-k/(1+m*v*v/k));$('muv').textContent=mu;$('kav').textContent=ka;
+ plot('c_f',[{n:'LDA (F=1)',x:s,y:s.map(_=>1)},{n:'PBE (μ=0.2195, κ=0.804)',x:s,y:F(.2195,.804)},{n:'PBEsol (μ=0.1235, κ=0.804)',x:s,y:F(.1235,.804)},{n:`Anda (μ=${mu}, κ=${ka})`,x:s,y:F(mu,ka),c:'#d08000'},{n:'batas Lieb–Oxford 1.804',x:s,y:s.map(_=>1.804),d:1,c:'#888'}],{xl:'s = |∇ρ| / (2 k_F ρ)',yl:'F_x(s)',y0:.9,y1:2});
+ $('t_f').textContent='F_x(s→∞) = 1+κ = '+(1+ka).toFixed(3)+((1+ka)>1.804?' → melanggar batas Lieb–Oxford':' (memenuhi batas)')}
+// 6 basis
+const STO={1:[[.270950,1]],2:[[.151623,.678914],[.851819,.430129]],3:[[.109818,.444635],[.405771,.535328],[2.227661,.154329]]};
+function vB(){const n=+$('nG').value,lg=$('lg').checked,r=lin(0,4,300);$('nGv').textContent=n;const sl=r.map(v=>Math.exp(-v)/Math.sqrt(Math.PI)),gs=r.map(v=>STO[n].reduce((s,[a,c])=>s+c*Math.pow(2*a/Math.PI,.75)*Math.exp(-a*v*v),0)),T=y=>lg?y.map(v=>Math.log10(Math.max(v,1e-6))):y;
+ plot('c_b',[{n:'Slater 1s (eksak untuk H)',x:r,y:T(sl)},{n:`STO-${n}G`,x:r,y:T(gs),d:1}],{xl:'r (a₀)',yl:lg?'log₁₀ ψ':'ψ(r)'})}
+// 7 SCF
+let scfT;function vS(anim){clearInterval(scfT);const a=+$('al').value,thr=+$('thr').value,f=1-2.5*a,K=40,x=lin(0,K-1,K);$('alv').textContent=a;let v=1,e=[],d=[],cv=-1;
+ for(let i=0;i<K;i++){e.push(-76+.05*v);d.push(Math.log10(Math.max(Math.abs(.05*v),1e-14)));if(cv<0&&Math.abs(.05*v)<thr)cv=i;v*=f}
+ const draw=n=>{const xi=x.slice(0,n);plot('c_s1',[{n:'E(n)',x:xi,y:e.slice(0,n)}],{xl:'iterasi SCF',yl:'E (Eh, ilustrasi)',x0:0,x1:K-1,y0:-76.06,y1:-75.94});
+  plot('c_s2',[{n:'log₁₀|ΔE|',x:xi,y:d.slice(0,n)},{n:'ambang',x:[0,K-1],y:[Math.log10(thr),Math.log10(thr)],d:1,c:'#d33'}],{xl:'iterasi SCF',yl:'log₁₀|ΔE| (Eh)',x0:0,x1:K-1,y0:-14,y1:-1})};
+ $('t_s').textContent=Math.abs(f)>=1?`Faktor ${f.toFixed(2)}: |faktor|≥1, SCF divergen/berosilasi. Turunkan α.`:cv>=0?`Konvergen pada iterasi ${cv}${f<0?' (dengan osilasi)':''}.`:`Belum konvergen dalam ${K} iterasi: naikkan α.`;
+ if(anim){let n=2;draw(n);scfT=setInterval(()=>{draw(++n);if(n>=K)clearInterval(scfT)},70)}else draw(K)}
+// 8 PES
+const PES={m:{f:x=>.2*(1-Math.exp(-1.2*(x-1)))**2,a:.4,b:3.5,s:2.2,st:.8},t:{f:x=>(x*x-1)**2/4,a:-1.6,b:1.6,s:.35,st:.12}};
+function setP(){const P=PES[$('pt').value];$('px').min=P.a;$('px').max=P.b;$('px').value=P.s;vP()}
+function vP(x){const P=PES[$('pt').value],h=1e-3,f=P.f;if(x===undefined)x=+$('px').value;const g=(f(x+h)-f(x-h))/(2*h),k=(f(x+h)-2*f(x)+f(x-h))/(h*h),xs=lin(P.a,P.b,300);
+ plot('c_p',[{n:'E(x)',x:xs,y:xs.map(f)}],{xl:'koordinat reaksi / panjang ikatan',yl:'E (ilustrasi)'}).dot(x,f(x));
+ $('t_p').innerHTML=`x=${x.toFixed(3)} · E=${f(x).toFixed(4)} · gradien=${g.toFixed(4)} · kelengkungan k=${k.toFixed(3)} → `+(Math.abs(g)<1e-3?(k>0?'<span class="ok">minimum (semua frekuensi real)</span>':'<span class="bad">gradien≈0 tetapi k&lt;0: titik pelana, ada frekuensi imajiner</span>'):'belum stasioner')}
+let optT;function opt(){clearInterval(optT);const P=PES[$('pt').value];let x=+$('px').value,n=0;optT=setInterval(()=>{const g=(P.f(x+1e-3)-P.f(x-1e-3))/2e-3;x-=P.st*g;x=Math.min(P.b,Math.max(P.a,x));$('px').value=x;vP(x);if(Math.abs(g)<1e-4||++n>400)clearInterval(optT)},25)}
+// 9 properti
+function vC(){const h=+$('eh').value,l=+$('el').value,IP=-h,EA=-l,eta=(IP-EA)/2,mu=-(IP+EA)/2,c=$('c_c').getContext('2d'),fg=getComputedStyle(document.body).color,lo=Math.min(h,l)-1.5,hi=Math.max(h,l)+1.5,Y=e=>220-(e-lo)/(hi-lo)*200;
+ c.clearRect(0,0,360,240);c.font='13px system-ui';c.lineWidth=3;c.fillStyle=fg;[[h,'HOMO','#d33'],[l,'LUMO','#1a6fd4']].forEach(([e,n,col])=>{c.strokeStyle=col;c.beginPath();c.moveTo(80,Y(e));c.lineTo(220,Y(e));c.stroke();c.fillText(n+' '+e.toFixed(2)+' eV',228,Y(e)+4)});
+ c.strokeStyle='#1a9a4a';c.lineWidth=1.5;c.beginPath();c.moveTo(40,Y(h));c.lineTo(40,Y(l));c.stroke();c.fillStyle='#1a9a4a';c.fillText('Eg='+(l-h).toFixed(2),4,(Y(h)+Y(l))/2);
+ $('t_c').innerHTML='<table>'+[['IP ≈ −E_HOMO',IP],['EA ≈ −E_LUMO',EA],['η=(IP−EA)/2',eta],['S=1/η (eV⁻¹)',1/eta],['μ=−(IP+EA)/2',mu],['χ=−μ',-mu],['ω=μ²/2η',mu*mu/(2*eta)]].map(([a,b])=>`<tr><td>${a}</td><td>${b.toFixed(3)}</td></tr>`).join('')+'</table>'}
+function vT(){const L=$('ex').value.split('\n').map(l=>l.trim().split(/\s+/).map(Number)).filter(a=>a.length>=2&&a[0]>0),s=+$('sg').value*8065.544,x=lin(200,800,300);$('sgv').textContent=$('sg').value;
+ plot('c_t',[{n:'ε(λ)',x,y:x.map(l=>L.reduce((t,[w,f])=>t+1.3062974e8*f/s*Math.exp(-(((1e7/l-1e7/w)/s)**2)),0))}],{xl:'λ (nm)',yl:'ε (M⁻¹cm⁻¹)',y0:0})}
+// 11 kuis
+const Q=[['Fungsi gelombang N elektron bergantung pada berapa koordinat spasial?',['N','3N','3','N²'],1],['Teorema Hohenberg–Kohn: energi keadaan dasar adalah fungsional dari…',['fungsi gelombang Ψ','ρ(r)','jumlah proton saja','basis set'],1],['SCF berosilasi hebat dan tidak konvergen. Langkah pertama yang masuk akal?',['Naikkan mixing α','Turunkan mixing/damping','Hapus ambang konvergensi','Ganti ke basis lebih kecil'],1],['Optimasi selesai dengan satu frekuensi imajiner. Artinya?',['Struktur minimum sejati','Titik pelana (TS) atau struktur perlu dioptimasi lagi','Basis set terlalu besar','SCF tidak konvergen'],1],['Estimasi Koopmans untuk potensial ionisasi adalah…',['+E_LUMO','−E_HOMO','E_HOMO−E_LUMO','η/2'],1],['Fungsional hibrida (mis. B3LYP) mencampur…',['LDA dengan MP2','sebagian pertukaran Hartree–Fock eksak','dua basis set','solvasi implisit'],1]];
+$('quiz').innerHTML=Q.map((q,i)=>`<p><b>${i+1}. ${q[0]}</b><br>`+q[1].map((o,j)=>`<label><input type="radio" name="q${i}" value="${j}"> ${o}</label> `).join('')+`<span id="r${i}"></span></p>`).join('');
+function grade(){let s=0;Q.forEach((q,i)=>{const v=document.querySelector(`input[name=q${i}]:checked`),ok=v&&+v.value==q[2];s+=ok?1:0;$('r'+i).innerHTML=v?(ok?' <span class="ok">benar</span>':' <span class="bad">salah: '+q[1][q[2]]+'</span>'):''});$('score').textContent='Skor '+s+'/'+Q.length}
+// 12 pustaka
+const V=1,U=0,REF=[[V,'Hohenberg, P.; Kohn, W. Inhomogeneous Electron Gas. Phys. Rev. 136, B864 (1964).','10.1103/PhysRev.136.B864'],[V,'Kohn, W.; Sham, L. J. Self-Consistent Equations Including Exchange and Correlation Effects. Phys. Rev. 140, A1133 (1965).','10.1103/PhysRev.140.A1133'],[V,'Jones, R. O. Density functional theory: its origins, rise to prominence, and future. Rev. Mod. Phys. 87, 897 (2015).','10.1103/RevModPhys.87.897'],[V,'Becke, A. D. Perspective: Fifty years of density-functional theory in chemical physics. J. Chem. Phys. 140, 18A301 (2014).','10.1063/1.4869598'],[V,'Neese, F. The ORCA program system. WIREs Comput. Mol. Sci. 12, e1606 (2022).','10.1002/wcms.1606'],[V,'Lejaeghere, K. et al. Reproducibility in density functional theory calculations of solids. Science 351, aad3000 (2016).','10.1126/science.aad3000'],[V,'Levine, D. S. et al. The Open Molecules 2025 (OMol25) Dataset, Evaluations, and Models. arXiv:2505.08762 (2025).','',  'https://arxiv.org/abs/2505.08762'],[U,'Runge, E.; Gross, E. K. U. Density-Functional Theory for Time-Dependent Systems. Phys. Rev. Lett. 52, 997 (1984).','10.1103/PhysRevLett.52.997'],[U,'Becke, A. D. Density-functional thermochemistry. III. The role of exact exchange. J. Chem. Phys. 98, 5648 (1993).','10.1063/1.464913'],[U,'Lee, C.; Yang, W.; Parr, R. G. Phys. Rev. B 37, 785 (1988).','10.1103/PhysRevB.37.785'],[U,'Perdew, J. P.; Burke, K.; Ernzerhof, M. Generalized Gradient Approximation Made Simple. Phys. Rev. Lett. 77, 3865 (1996).','10.1103/PhysRevLett.77.3865'],[U,'Grimme, S.; Antony, J.; Ehrlich, S.; Krieg, H. A consistent and accurate ab initio parametrization of density functional dispersion correction (DFT-D). J. Chem. Phys. 132, 154104 (2010).','10.1063/1.3382344'],[U,'Weigend, F.; Ahlrichs, R. Balanced basis sets of split valence, triple zeta valence and quadruple zeta valence quality for H to Rn. Phys. Chem. Chem. Phys. 7, 3297 (2005).','10.1039/B508541A'],[U,'Hehre, W. J.; Stewart, R. F.; Pople, J. A. Self-Consistent Molecular-Orbital Methods. I. Use of Gaussian Expansions of Slater-Type Atomic Orbitals. J. Chem. Phys. 51, 2657 (1969).','10.1063/1.1672392'],[U,'Parr, R. G.; Szentpály, L. v.; Liu, S. Electrophilicity Index. J. Am. Chem. Soc. 121, 1922 (1999).','10.1021/ja983494x']];
+$('refs').innerHTML=REF.map(r=>`<li>${r[1]} <a href="${r[3]||'https://doi.org/'+r[2]}" target="_blank" rel="noopener">${r[3]?'arXiv':'DOI'}</a> <span class="tag ${r[0]?'':'u'}">${r[0]?'terverifikasi':'cek ulang'}</span></li>`).join('');
+// init
+document.querySelectorAll('.orb').forEach(e=>e.onchange=vH);$('rmax').oninput=vH;$('N').oninput=vD;$('mu').oninput=$('ka').oninput=vF;$('nG').oninput=$('lg').onchange=vB;$('al').oninput=$('thr').onchange=()=>vS(false);$('pt').onchange=setP;$('px').oninput=()=>vP();$('eh').oninput=$('el').oninput=vC;$('ex').oninput=$('sg').oninput=vT;
+vH();vD();vF();vB();vS(false);setP();vC();vT();
+</script></body></html>

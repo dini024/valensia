@@ -1,0 +1,81 @@
+<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Molecular Builder | CompChem Lab</title><link rel="stylesheet" href="assets/css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@rdkit/rdkit/dist/RDKit_minimal.js"></script><script src="https://3Dmol.org/build/3Dmol-min.js"></script></head><body>
+<h1>Molecular Builder · SMILES → 3D → Input</h1>
+<nav><a href="index.html">Dashboard</a><a href="course.html">Course</a><a href="molecular-builder.html">Molecular Builder</a><a href="input-builder.html">Input Builder</a><a href="results-analyzer.html">Results</a><a href="orca-docker.html">ORCA Docker</a></nav>
+<p>Semua berjalan di browser. Status: <b id="st">memuat RDKit.js…</b></p>
+<div class="card"><h2>Molecular library · PubChem / ChEMBL / ZINC</h2>
+Database <select id="db"><option value="pubchem">PubChem</option><option value="chembl">ChEMBL</option><option value="local">Local library (24 molekul)</option><option value="zinc">ZINC (tautan)</option></select>
+Nama/kata kunci <input id="q" placeholder="mis. azobenzene" size="24"> <button onclick="search()">Search library</button> <button onclick="lib()">Show local library</button>
+<a href="https://pubchem.ncbi.nlm.nih.gov/" target="_blank">PubChem ↗</a> <a href="https://www.ebi.ac.uk/chembl/" target="_blank">ChEMBL ↗</a> <a href="https://zinc.docking.org/" target="_blank">ZINC ↗</a>
+<div id="res" style="max-height:220px;overflow:auto;margin-top:8px"></div></div>
+<div class="card"><h2>Visual editor (gambar manual)</h2><div id="jsme" style="min-height:320px"></div><button onclick="fromEditor()">Editor → SMILES</button> <button onclick="toEditor()">SMILES → editor</button></div>
+<div class="card"><h2>SMILES → 2D molecule</h2>SMILES <input id="smi" size="46" value="c1ccc(cc1)N=Nc1ccccc1"> <button onclick="build()">Build</button><br>
+<span id="ex"></span><div id="depict" style="margin-top:8px"></div><button onclick="navigator.clipboard.writeText(CAN)">Copy canonical SMILES</button> <button onclick="dl('descriptors.csv','property,value\n'+Object.entries(desc).map(e=>e.join(',')).join('\n'))">Export descriptors CSV</button></div>
+<div class="card"><h2>Design substituent series</h2>Gunakan tepat satu <code>[*]</code> pada scaffold; satu substituen SMILES per baris.<br>Core scaffold SMILES <input id="core" size="30" value="c1ccc(cc1)N=Nc1ccc([*])cc1"><br>
+<textarea id="subs" rows="8" style="width:180px">F
+Cl
+Br
+OC
+O
+C
+C#N
+C(=O)O
+C(=O)N
+N
+S(=O)(=O)N</textarea><br><button onclick="enumerate()">Enumerate candidates</button> <button onclick="dl('series.csv','substituent,smiles\n'+series.map(s=>s.join(',')).join('\n'))">Download CSV</button> <span id="sm"></span><div class="grid" id="sg"></div></div>
+<div class="card"><h2>Molecular descriptors</h2><small>Descriptor struktur (RDKit), bukan hasil DFT.</small> Status: <b id="dst">—</b> <button onclick="dl('descriptors.json',JSON.stringify(desc,null,1))">Export JSON</button><div id="desc" style="max-height:260px;overflow:auto"></div></div>
+<div class="card"><h2>3D structure preview</h2><button onclick="gen3d()">Generate 3D + pre-optimize</button> <button onclick="dl('molecule.xyz',xyz)">Download XYZ</button> <button onclick="dl('molecule.sdf',sdf)">Download SDF</button> <a href="input-builder.html"><button>Lanjut ke Input Builder →</button></a><p id="s3">Klik Build, lalu Generate 3D.</p><div class="v" id="v3"></div>
+<small>Urutan: konformer 3D PubChem jika molekul ada; jika tidak, pre-optimize kasar di browser (pegas ikatan/sudut/planaritas sp2; stereokimia tidak dijamin). Untuk kualitas produksi gunakan RDKit ETKDG+MMFF atau xtb sebelum DFT.</small></div>
+<script>
+const $=id=>document.getElementById(id),esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let RD,CAN='',xyz='',sdf='',desc={},series=[],viewer,jsme;
+const LIB={Benzene:'c1ccccc1',Toluene:'Cc1ccccc1',Phenol:'Oc1ccccc1',Aniline:'Nc1ccccc1',Anisole:'COc1ccccc1',Pyridine:'c1ccncc1',Naphthalene:'c1ccc2ccccc2c1',Azobenzene:'c1ccc(cc1)N=Nc1ccccc1',Stilbene:'c1ccccc1/C=C/c1ccccc1',Aspirin:'CC(=O)Oc1ccccc1C(=O)O',Caffeine:'Cn1cnc2c1c(=O)n(C)c(=O)n2C',Glycine:'NCC(=O)O',Ethanol:'CCO',Acetone:'CC(C)=O','Acetic acid':'CC(=O)O',Urea:'NC(N)=O',Thiophene:'c1ccsc1',Furan:'c1ccoc1',Pyrrole:'c1cc[nH]c1',Biphenyl:'c1ccc(cc1)-c1ccccc1',Anthracene:'c1ccc2cc3ccccc3cc2c1',Nitrobenzene:'[O-][N+](=O)c1ccccc1','Benzoic acid':'OC(=O)c1ccccc1',Triphenylamine:'c1ccc(cc1)N(c1ccccc1)c1ccccc1'};
+function dl(n,t){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t]));a.download=n;a.click()}
+const row=(n,s,x)=>`<div>${esc(n)} <code>${esc(s)}</code> <small>${esc(x)}</small> <button data-s="${esc(s)}">Build in editor</button></div>`;
+function lib(){$('res').innerHTML=Object.entries(LIB).map(([n,s])=>row(n,s,'')).join('')}
+$('res').onclick=$('sg').onclick=e=>{const s=e.target.dataset.s;if(s)use(s)};
+$('ex').innerHTML=['Benzene','Azobenzene','Anisole','Aspirin','Glycine','Caffeine'].map(n=>`<button data-s="${LIB[n]}">${n}</button>`).join(' ');$('ex').onclick=$('res').onclick;
+function use(s){$('smi').value=s;build();if(jsme)jsme.readGenericMolecularInput(s);$('smi').scrollIntoView({behavior:'smooth'})}
+async function search(){const db=$('db').value,q=$('q').value.trim();if(db=='local'||!q)return lib();if(db=='zinc'){$('res').innerHTML='ZINC tidak punya API browser stabil: cari di <a href="https://zinc.docking.org/" target="_blank">zinc.docking.org</a>, lalu tempel SMILES di bawah.';return}
+ $('res').textContent='Mencari…';try{let out=[];
+ if(db=='pubchem'){const j=await(await fetch(`https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/${encodeURIComponent(q)}/property/IsomericSMILES,MolecularFormula,MolecularWeight/JSON`)).json();out=j.PropertyTable.Properties.slice(0,10).map(p=>[q+' (CID '+p.CID+')',p.SMILES||p.IsomericSMILES||p.CanonicalSMILES||p.ConnectivitySMILES,p.MolecularFormula+' · '+p.MolecularWeight])}
+ else{const j=await(await fetch('https://www.ebi.ac.uk/chembl/api/data/molecule/search.json?limit=10&q='+encodeURIComponent(q))).json();out=j.molecules.filter(m=>m.molecule_structures).map(m=>[m.pref_name||m.molecule_chembl_id,m.molecule_structures.canonical_smiles,m.molecule_chembl_id])}
+ $('res').innerHTML=out.length?out.map(o=>row(...o)).join(''):'Tidak ditemukan.'}catch(e){$('res').textContent='Gagal/tidak ditemukan (butuh internet): '+e.message}}
+function build(){if(!RD)return;const m=RD.get_mol($('smi').value.trim());if(!m||!m.is_valid()){$('depict').textContent='SMILES tidak valid';if(m)m.delete();return}
+ CAN=m.get_smiles();$('depict').innerHTML=m.get_svg(380,280)+`<p><code>${esc(CAN)}</code></p>`;desc=JSON.parse(m.get_descriptors());desc.canonical_smiles=CAN;
+ $('desc').innerHTML='<table>'+Object.entries(desc).map(([k,v])=>`<tr><td>${k}</td><td>${typeof v=='number'?+v.toFixed(4):esc(v)}</td></tr>`).join('')+'</table>';$('dst').textContent='OK';m.delete()}
+function enumerate(){const core=$('core').value.trim();if(!RD)return;if((core.match(/\[\*\]/g)||[]).length!=1){$('sm').textContent='Scaffold harus memuat tepat satu [*].';return}
+ series=[];$('sg').innerHTML='';for(const s of $('subs').value.split('\n').map(x=>x.trim()).filter(Boolean)){const m=RD.get_mol(core.replace('[*]',()=>s));if(m&&m.is_valid()){const c=m.get_smiles();series.push([s,c]);$('sg').innerHTML+=`<div class="card">${m.get_svg(170,130)}<br><small>${esc(s)}</small><br><button data-s="${esc(c)}">Build</button></div>`}if(m)m.delete()}
+ $('sm').textContent=series.length+' kandidat valid.'}
+function sdf2xyz(s){const L=s.split('\n'),n=+L[3].substr(0,3),o=[n,'molecule'];for(let i=0;i<n;i++){const p=L[4+i].trim().split(/\s+/);o.push(p[3].padEnd(3)+[p[0],p[1],p[2]].map(v=>(+v).toFixed(6).padStart(12)).join(''))}return o.join('\n')}
+function relax(m){const L=m.add_hs().split('\n'),n=+L[3].substr(0,3),nb=+L[3].substr(3,3),A=[],B=[];
+ for(let i=0;i<n;i++){const p=L[4+i].trim().split(/\s+/);A.push({e:p[3],r:[+p[0]*.93,+p[1]*.93,(Math.random()-.5)*.8]})}
+ for(let i=0;i<nb;i++){const l=L[4+n+i];B.push([+l.substr(0,3)-1,+l.substr(3,3)-1,+l.substr(6,3)])}
+ const arA=new Set(),arB=new Set(),q1=RD.get_qmol('[a]'),q2=RD.get_qmol('a:a');
+ try{JSON.parse(m.get_substruct_matches(q1)||'[]').forEach(x=>arA.add(x.atoms[0]));JSON.parse(m.get_substruct_matches(q2)||'[]').forEach(x=>{arB.add(x.atoms[0]+'-'+x.atoms[1]);arB.add(x.atoms[1]+'-'+x.atoms[0])})}catch(e){}q1.delete();q2.delete();
+ const nbr=A.map(_=>[]),ord={};B.forEach(([a,b,o])=>{nbr[a].push(b);nbr[b].push(a);ord[a+'-'+b]=ord[b+'-'+a]=o});
+ const RC={H:.31,C:.76,N:.71,O:.66,F:.57,S:1.05,P:1.07,Cl:1.02,Br:1.2,I:1.39,B:.84,Si:1.11},rc=e=>RC[e]||.8;
+ const hy=a=>{if(A[a].e=='H')return 0;if(arA.has(a))return 120;const o=nbr[a].map(b=>ord[a+'-'+b]);return o.includes(3)||o.filter(x=>x==2).length>1?180:o.includes(2)?120:109.5};
+ const len=(a,b)=>{const o=ord[a+'-'+b],d=rc(A[a].e)+rc(A[b].e);return arB.has(a+'-'+b)?d-.12:o==3?d-.32:o==2?d-.18:(hy(a)>=120&&hy(b)>=120)?d-.07:d};
+ const S=[],ex=new Set(),key=(a,b)=>a<b?a+'-'+b:b+'-'+a;
+ B.forEach(([a,b])=>{S.push([a,b,len(a,b),10]);ex.add(key(a,b))});
+ A.forEach((_,c)=>{const t=hy(c)||109.5;for(let x=0;x<nbr[c].length;x++)for(let y=x+1;y<nbr[c].length;y++){const a=nbr[c][x],b=nbr[c][y],p=len(c,a),q=len(c,b);S.push([a,b,Math.sqrt(p*p+q*q-2*p*q*Math.cos(t*Math.PI/180)),4]);ex.add(key(a,b))}});
+ const d0=(a,b)=>Math.hypot(A[a].r[0]-A[b].r[0],A[a].r[1]-A[b].r[1]);
+ B.forEach(([j,k])=>{if(hy(j)>=120&&hy(k)>=120)nbr[j].forEach(i=>{if(i!=k)nbr[k].forEach(l=>{if(l!=j&&l!=i&&!ex.has(key(i,l))){S.push([i,l,d0(i,l),3]);ex.add(key(i,l))}})})});
+ for(let it=0;it<700;it++){const g=A.map(_=>[0,0,0]);
+  const add=(a,b,t,k,rep)=>{const dx=A[a].r.map((v,i)=>v-A[b].r[i]),d=Math.hypot(...dx)||1e-6;if(rep&&d>=t)return;const f=k*(d-t)/d;for(let i=0;i<3;i++){g[a][i]+=f*dx[i];g[b][i]-=f*dx[i]}};
+  S.forEach(s=>add(...s));
+  for(let a=0;a<n;a++)for(let b=a+1;b<n;b++)if(!ex.has(key(a,b)))add(a,b,A[a].e=='H'||A[b].e=='H'?1.9:2.5,1,true);
+  A.forEach((x,i)=>{for(let c=0;c<3;c++)x.r[c]-=.03*g[i][c]})}
+ return{xyz:[n,'CompChem Lab rough pre-optimization',...A.map(x=>x.e.padEnd(3)+x.r.map(v=>v.toFixed(6).padStart(12)).join(''))].join('\n'),
+ sdf:['mol','  CompChemLab','',`${String(n).padStart(3)}${String(nb).padStart(3)}  0  0  0  0  0  0  0  0999 V2000`,...A.map(x=>x.r.map(v=>v.toFixed(4).padStart(10)).join('')+' '+x.e.padEnd(3)+' 0  0  0  0  0  0  0  0  0  0  0  0'),...B.map(b=>String(b[0]+1).padStart(3)+String(b[1]+1).padStart(3)+String(b[2]).padStart(3)+'  0'),'M  END',''].join('\n')}}
+async function gen3d(){if(!CAN||!RD)return;$('s3').textContent='Menyiapkan 3D…';let src='';
+ try{const r=await fetch('https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/smiles/'+encodeURIComponent(CAN)+'/SDF?record_type=3d');if(r.ok){sdf=await r.text();xyz=sdf2xyz(sdf);src='konformer 3D dari PubChem'}}catch(e){}
+ if(!src){const m=RD.get_mol(CAN),r=relax(m);m.delete();xyz=r.xyz;sdf=r.sdf;src='pre-optimize kasar di browser: cek geometri, lalu refine (MMFF/xtb)'}
+ localStorage.setItem('cc_xyz',xyz);$('s3').textContent='Selesai: '+src;
+ if(!viewer)viewer=$3Dmol.createViewer($('v3'),{backgroundColor:'white'});viewer.clear();viewer.addModel(xyz,'xyz');viewer.setStyle({},{stick:{radius:.15},sphere:{scale:.25}});viewer.zoomTo();viewer.render()}
+function jsmeOnLoad(){jsme=new JSApplet.JSME('jsme','100%','320px')}
+function fromEditor(){if(jsme){$('smi').value=jsme.smiles();build()}}
+function toEditor(){if(jsme)jsme.readGenericMolecularInput($('smi').value)}
+initRDKitModule({locateFile:f=>'https://cdn.jsdelivr.net/npm/@rdkit/rdkit/dist/'+f}).then(m=>{RD=m;$('st').textContent='RDKit.js siap';build();lib()}).catch(e=>$('st').textContent='RDKit gagal dimuat: '+e);
+</script><script src="https://jsme-editor.github.io/dist/jsme/jsme.nocache.js"></script></body></html>
