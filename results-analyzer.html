@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Results Analyzer ORCA & Gaussian — Quantum Chemistry Lab</title>
+<meta name="description" content="Unggah keluaran ORCA/Gaussian dan lihat geometri, frekuensi, orbital HOMO/LUMO, parameter elektrokimia, dan spektrum TDDFT. Semua diproses di browser Anda.">
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/results.css">
+</head>
+<body data-page="analyzer">
+<div class="container">
+  <div class="hero" style="padding-bottom:6px">
+    <span class="pill">Langkah 3 · analisis hasil</span>
+    <h1>Results Analyzer</h1>
+    <p class="lead">Unggah berkas keluaran (<code>.out</code> ORCA / <code>.log</code> Gaussian) dan, bila ada, berkas orbital (<code>.molden</code> / <code>.fchk</code> / <code>.cube</code>). Berkas tidak diunggah ke server — seluruh analisis berjalan di browser Anda.</p>
+  </div>
+
+  <div class="card">
+    <div class="grid g2">
+      <div>
+        <div id="drop" class="dropzone" tabindex="0" role="button" aria-label="Unggah berkas hasil">
+          <b>Seret berkas ke sini atau klik untuk memilih</b><br>
+          <span class="muted small">Boleh banyak berkas sekaligus: ORCA <code>.out</code>, Gaussian <code>.log</code>, <code>.molden</code>/<code>.molden.input</code>, <code>.fchk</code>, <code>.cube</code></span>
+          <input id="file-input" type="file" multiple class="hidden">
+        </div>
+        <div class="row" style="margin-top:10px">
+          <button class="btn sm" id="btn-demo-orca" type="button">Contoh: ORCA CH₂O</button>
+          <button class="btn sm" id="btn-demo-gauss" type="button">Contoh: Gaussian CH₂O</button>
+          <button class="btn sm" id="btn-demo-orb" type="button">Contoh: + orbital (molden)</button>
+          <button class="btn sm btn-danger" id="btn-clear" type="button">Kosongkan</button>
+        </div>
+      </div>
+      <div>
+        <b>Berkas dimuat</b>
+        <ul id="file-list" class="filelist"><li class="muted">Belum ada berkas.</li></ul>
+        <details><summary>Cara menyiapkan berkas orbital</summary>
+          <div class="small">
+            <p><b>ORCA:</b> <code>orca_2mkl nama -molden</code> → menghasilkan <code>nama.molden.input</code> dari <code>nama.gbw</code>.</p>
+            <p><b>Gaussian:</b> <code>formchk nama.chk nama.fchk</code> → unggah <code>nama.fchk</code> (berkas <code>.chk</code> biner tidak bisa dibaca langsung di browser).</p>
+            <p><b>TDDFT:</b> unggah <code>.out</code>/<code>.log</code> job TDDFT (boleh berkas yang berbeda dari job optimasi; hasilnya digabung).</p>
+          </div>
+        </details>
+      </div>
+    </div>
+  </div>
+
+  <div id="results" class="hidden" style="margin-top:16px">
+    <div id="res-tabs">
+      <div class="tabs" role="tablist">
+        <button class="tab active" data-tab="r-summary" type="button">Ringkasan</button>
+        <button class="tab" data-tab="r-geom" type="button">Geometri</button>
+        <button class="tab" data-tab="r-freq" type="button">Frekuensi</button>
+        <button class="tab" data-tab="r-props" type="button">Properti molekul</button>
+        <button class="tab" data-tab="r-orb" type="button">Orbital &amp; level energi</button>
+        <button class="tab" data-tab="r-echem" type="button">Parameter elektrokimia</button>
+        <button class="tab" data-tab="r-td" type="button">TDDFT &amp; spektrum</button>
+        <button class="tab" data-tab="r-dssc" type="button">Panel DSSC</button>
+        <button class="tab" data-tab="r-export" type="button">Ekspor</button>
+      </div>
+
+      <div id="r-summary" class="tab-panel active"><div id="sum-body"></div></div>
+
+      <div id="r-geom" class="tab-panel">
+        <div class="grid g2r">
+          <div>
+            <div class="row" style="margin-bottom:6px">
+              <select id="g-style" aria-label="Gaya tampilan"><option value="ballstick">Ball &amp; stick</option><option value="stick">Stick</option><option value="sphere">Spacefill</option><option value="line">Garis</option></select>
+              <label class="check"><input type="checkbox" id="g-labels"> Label atom</label>
+              <label class="check"><input type="checkbox" id="g-h" checked> Hidrogen</label>
+              <button class="btn sm" id="g-png" type="button">PNG</button>
+              <button class="btn sm" id="g-xyz" type="button">.xyz akhir</button>
+            </div>
+            <div id="g-viewer" class="viewer" style="height:420px"></div>
+            <div id="g-traj" class="hidden" style="margin-top:8px"><label>Langkah optimasi: <b id="g-step-lbl"></b></label><input id="g-step" type="range" min="0" max="0" value="0" style="width:100%"></div>
+            <div id="g-pick" class="callout info" style="margin-top:8px">Klik 2–4 atom pada molekul untuk mengukur jarak, sudut, dan dihedral.</div>
+          </div>
+          <div>
+            <div id="g-opt-chart" class="chartbox"></div>
+            <div id="g-conv" class="tablewrap" style="margin-top:8px"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="r-freq" class="tab-panel">
+        <div id="f-banner"></div>
+        <div class="grid g2r" style="margin-top:10px">
+          <div>
+            <div class="row"><label>Skala <input id="f-scale" type="number" step="0.001" value="1.000" style="width:80px"></label><label>FWHM (cm⁻¹) <input id="f-fwhm" type="number" step="1" value="20" style="width:70px"></label></div>
+            <div id="f-chart" class="chartbox"></div>
+            <div id="f-thermo"></div>
+          </div>
+          <div>
+            <div id="f-viewer" class="viewer" style="height:300px"></div>
+            <div class="row" style="margin-top:6px"><span id="f-mode-lbl" class="muted small">Pilih mode pada tabel untuk menganimasikan getaran.</span><button class="btn sm" id="f-stop" type="button">Stop</button></div>
+            <div id="f-table" class="tablewrap" style="margin-top:8px"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="r-props" class="tab-panel">
+        <div class="row" style="margin-bottom:8px">
+          <label class="check"><input type="checkbox" id="p-heavy" checked> Hanya atom berat untuk sudut/dihedral</label>
+          <label>Toleransi ikatan <input id="p-tol" type="number" step="0.05" value="1.15" style="width:70px"></label>
+          <input id="p-filter" type="search" placeholder="Filter (mis. C1, N–N, C–C)" style="min-width:200px">
+        </div>
+        <div id="p-plan"></div>
+        <div class="grid g3r">
+          <div><div class="row between"><b>Panjang ikatan (Å)</b><button class="btn sm" id="csv-bonds" type="button">CSV</button></div><div id="p-bonds" class="tablewrap"></div><div id="p-bond-stat" class="small muted"></div></div>
+          <div><div class="row between"><b>Sudut ikatan (°)</b><button class="btn sm" id="csv-angles" type="button">CSV</button></div><div id="p-angles" class="tablewrap"></div></div>
+          <div><div class="row between"><b>Sudut dihedral (°)</b><button class="btn sm" id="csv-dihs" type="button">CSV</button></div><div id="p-dihs" class="tablewrap"></div></div>
+        </div>
+      </div>
+
+      <div id="r-orb" class="tab-panel">
+        <div class="grid g2r">
+          <div><div id="o-levels" class="chartbox"></div><div id="o-gap" class="small"></div><div id="o-table" class="tablewrap" style="margin-top:8px"></div></div>
+          <div>
+            <div id="o-need" class="callout warn hidden">Gambar orbital 3D membutuhkan berkas <code>.molden</code> / <code>.fchk</code> / <code>.cube</code>. Unggah berkas tersebut di bagian atas halaman.</div>
+            <div id="o-ctrl" class="hidden">
+              <div class="row"><label>Orbital A <select id="o-a"></select></label><label>Orbital B <select id="o-b"></select></label></div>
+              <div class="row" style="margin-top:6px"><label>Isosurface ±<b id="o-iso-lbl">0.03</b> <input id="o-iso" type="range" min="0.005" max="0.12" step="0.005" value="0.03"></label>
+                <label>Resolusi <select id="o-res"><option value="0.35">Cepat</option><option value="0.25" selected>Normal</option><option value="0.18">Halus</option></select></label>
+                <button class="btn primary sm" id="o-render" type="button">Gambar orbital</button></div>
+              <div id="o-prog" class="muted small"></div>
+              <div class="grid g2" style="margin-top:8px"><div><div class="small center" id="o-ta"></div><div id="o-va" class="viewer" style="height:260px"></div></div><div><div class="small center" id="o-tb"></div><div id="o-vb" class="viewer" style="height:260px"></div></div></div>
+              <div class="muted small">Biru = fase positif, oranye = fase negatif.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="r-echem" class="tab-panel"><div id="e-body"></div></div>
+
+      <div id="r-td" class="tab-panel">
+        <div id="t-none" class="callout warn hidden">Tidak ada data TDDFT. Unggah keluaran job TDDFT (ORCA <code>%tddft</code> / Gaussian <code>td=</code>).</div>
+        <div id="t-body" class="hidden">
+          <div class="row"><label>FWHM (eV) <input id="t-fwhm" type="number" step="0.05" min="0.02" value="0.30" style="width:80px"></label>
+            <label>Bentuk <select id="t-shape"><option value="gauss">Gauss</option><option value="lorentz">Lorentz</option></select></label>
+            <label>Min nm <input id="t-min" type="number" placeholder="auto" style="width:80px"></label><label>Maks nm <input id="t-max" type="number" placeholder="auto" style="width:80px"></label>
+            <label>Tampilkan f ≥ <input id="t-fmin" type="number" step="0.001" value="0" style="width:80px"></label>
+            <button class="btn sm" id="csv-spec" type="button">CSV spektrum</button><button class="btn sm" id="csv-td" type="button">CSV tabel</button></div>
+          <div id="t-chart" class="chartbox"></div>
+          <div id="t-lambda" class="row" style="margin:6px 0"></div>
+          <div id="t-table" class="tablewrap"></div>
+          <p class="muted small">ε<sub>puncak</sub> dari f: ∫ε dν̃ = 2.315×10⁸·f (M⁻¹cm⁻¹·cm⁻¹); LHE = 1 − 10<sup>−f</sup>. Lebar pita FWHM adalah parameter tampilan, bukan hasil perhitungan.</p>
+        </div>
+      </div>
+
+      <div id="r-dssc" class="tab-panel"><div id="d-body"></div></div>
+
+      <div id="r-export" class="tab-panel"><div id="x-body"></div></div>
+    </div>
+  </div>
+</div>
+<div id="site-footer"></div>
+<script src="assets/js/common.js"></script>
+<script src="assets/js/plot.js"></script>
+<script src="assets/js/parsers.js"></script>
+<script src="assets/js/analysis.js"></script>
+<script src="assets/js/orbitals.js"></script>
+<script src="assets/js/results.js"></script>
+</body>
+</html>

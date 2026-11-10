@@ -1,0 +1,15 @@
+.g2r{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:16px;align-items:start}
+.g3r{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;align-items:start}
+@media (max-width:1000px){.g2r,.g3r{grid-template-columns:minmax(0,1fr)}}
+.filelist{list-style:none;margin:6px 0;padding:0;font-size:.88rem} .filelist li{display:flex;gap:8px;align-items:center;padding:3px 0;border-bottom:1px dashed var(--border)}
+.chartbox{min-height:260px}
+.statgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:8px 0 14px}
+.stat{background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:10px 12px}
+.stat .k{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)} .stat .v{font-size:1.15rem;font-weight:700;margin-top:2px;word-break:break-word}
+.stat.ok{border-color:var(--ok);background:var(--ok-soft)} .stat.bad{border-color:var(--danger);background:var(--danger-soft)}
+.tablewrap table.data td.num,.tablewrap table.data th.num{text-align:right;font-variant-numeric:tabular-nums}
+tr.sel{background:var(--accent-soft)} tr.clk{cursor:pointer} tr.imag td{color:var(--danger);font-weight:650}
+.viewer{border-radius:10px;overflow:hidden;position:relative;background:#0f1d2e;min-height:160px}
+.bigflag{display:flex;gap:12px;align-items:center;border-radius:12px;padding:14px 16px;font-size:1.05rem;font-weight:650}
+.bigflag.ok{background:var(--ok-soft);color:var(--ok);border:1px solid var(--ok)} .bigflag.bad{background:var(--danger-soft);color:var(--danger);border:1px solid var(--danger)}
+svg.lv text{fill:var(--plot-text);font-size:11px} svg.lv .occ{stroke:var(--c1)} svg.lv .vir{stroke:var(--c2)}

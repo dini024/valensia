@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Quantum Chemistry Lab — modul DFT, builder, input, dan analisis hasil</title>
+<meta name="description" content="Modul interaktif kimia komputasi dan DFT, molecular builder, input builder ORCA/Gaussian, results analyzer, dan ORCA Docker workbench.">
+<link rel="stylesheet" href="assets/css/style.css">
+<style>
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin:18px 0}
+.tile{display:flex;flex-direction:column;gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;color:var(--text);transition:transform .15s,border-color .15s,box-shadow .15s}
+.tile:hover{transform:translateY(-2px);border-color:var(--accent);text-decoration:none;box-shadow:0 6px 20px rgba(0,0,0,.08)}
+.tile .no{font-size:.75rem;font-weight:700;color:var(--accent);letter-spacing:.08em;text-transform:uppercase}
+.tile h3{margin:.1em 0}.tile p{margin:0;color:var(--muted);font-size:.92rem}.tile .go{margin-top:auto;padding-top:8px;color:var(--accent);font-weight:650;font-size:.9rem}
+.flow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:10px 0}
+.flow span.s{background:var(--accent-soft);color:var(--accent);padding:6px 12px;border-radius:999px;font-weight:650;font-size:.85rem}
+.flow span.a{color:var(--muted)}
+</style>
+</head>
+<body data-page="home">
+<div class="container">
+  <div class="hero">
+    <span class="pill">Kimia komputasi · DFT · ORCA · Gaussian</span>
+    <h1>Dari persamaan Schrödinger sampai spektrum serapan — dalam satu alur kerja.</h1>
+    <p class="lead">Belajar DFT lewat visual interaktif, bangun molekul 3D, siapkan input ORCA/Gaussian, jalankan di Docker atau HPC, lalu analisis hasilnya: geometri, frekuensi, orbital, parameter elektrokimia, dan TDDFT. Semua alat berjalan di browser Anda.</p>
+  </div>
+  <div class="flow" aria-label="Alur kerja"><span class="s">1 Belajar</span><span class="a">→</span><span class="s">2 Bangun molekul</span><span class="a">→</span><span class="s">3 Input ORCA/Gaussian</span><span class="a">→</span><span class="s">4 Jalankan (Docker/HPC)</span><span class="a">→</span><span class="s">5 Analisis</span></div>
+  <div class="tiles">
+    <a class="tile" href="course.html"><span class="no">Modul 1</span><h3>Kuliah interaktif DFT</h3><p>Mengapa simulasi penting (dengan rujukan paper), Schrödinger, kerumitan banyak-elektron, teorema Hohenberg–Kohn, siklus SCF, basis set, tangga Jacob, biaya komputasi, PES &amp; frekuensi, TDDFT, dan kuis.</p><span class="go">Mulai belajar →</span></a>
+    <a class="tile" href="molecular-builder.html"><span class="no">Alat 2</span><h3>Molecular Builder</h3><p>SMILES / nama / pustaka → 2D, deskriptor, seri substituen, lalu 3D + pre-optimize (konformer, force field) dan ekspor XYZ/SDF.</p><span class="go">Bangun molekul →</span></a>
+    <a class="tile" href="input-builder.html"><span class="no">Alat 3</span><h3>Input Builder ORCA &amp; Gaussian</h3><p>Opt, Freq, TDDFT, scan, TS, solvasi, SCF, keluaran molden/fchk, batch, plus skrip SLURM &amp; Docker. Terhubung langsung dari Molecular Builder.</p><span class="go">Siapkan input →</span></a>
+    <a class="tile" href="results-analyzer.html"><span class="no">Alat 4</span><h3>Results Analyzer</h3><p>Unggah .out/.log (+ molden/fchk): geometri teroptimasi, cek imaginary frequency, ikatan/sudut/dihedral/planaritas, HOMO/LUMO 3D, level energi, IP/EA/η/ω, spektrum UV-Vis, tabel TDDFT, panel DSSC.</p><span class="go">Analisis hasil →</span></a>
+    <a class="tile" href="orca-docker.html"><span class="no">Alat 5</span><h3>ORCA Docker Workbench</h3><p>Kirim job ke Docker lokal, agen di MacBook, atau SLURM HPC BRIN; pantau log &amp; progres SCF/optimasi; kirim hasil ke Analyzer. Mode demo tersedia tanpa backend.</p><span class="go">Buka workbench →</span></a>
+    <div class="tile"><span class="no">Catatan</span><h3>Privasi &amp; lisensi</h3><p>Berkas Anda diproses lokal di browser (tidak diunggah) kecuali Anda sendiri mengaktifkan backend. ORCA/Gaussian berlisensi dan <b>tidak</b> disertakan; Anda memakai instalasi/lisensi sendiri.</p></div>
+  </div>
+  <div class="card"><h3 style="margin-top:0">Contoh cepat</h3>
+    <ol><li>Buka <a href="molecular-builder.html">Molecular Builder</a> → pilih “Azobenzena” → <i>Generate 3D + pre-optimize</i> → <i>Lanjut → ORCA input</i>.</li>
+    <li>Atur preset <i>Optimasi + frekuensi</i>, unduh <code>.inp</code>, jalankan di ORCA Anda (atau Docker/HPC).</li>
+    <li>Unggah <code>.out</code> (+ <code>.molden</code>) ke <a href="results-analyzer.html">Results Analyzer</a>; atau coba tombol <i>Contoh</i> di sana.</li></ol></div>
+</div>
+<div id="site-footer"></div>
+<script src="assets/js/common.js"></script>
+</body>
+</html>

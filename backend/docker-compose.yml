@@ -1,0 +1,14 @@
+services:
+  api:
+    build: .
+    ports: ["127.0.0.1:8000:8000"]     # hanya localhost; pasang reverse proxy HTTPS untuk akses luar
+    env_file: .env
+    volumes:
+      - ./data:/srv/data
+      # - ~/.ssh/id_ed25519:/home/app/.ssh/id_ed25519:ro      # untuk slurm_brin
+      # PERINGATAN KEAMANAN: memasang docker.sock memberi akses setara root ke host.
+      # Aktifkan HANYA untuk mesin pribadi tepercaya dengan API_KEY kuat. Alternatif lebih aman:
+      # jalankan backend langsung di host (uvicorn) atau pakai local-agent.
+      # - /var/run/docker.sock:/var/run/docker.sock
+    # untuk local_docker via docker.sock, path volume job harus identik di host dan container;
+    # paling mudah: jalankan backend di host tanpa container.

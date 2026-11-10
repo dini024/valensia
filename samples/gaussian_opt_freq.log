@@ -1,0 +1,165 @@
+ ****** DATA CONTOH (DUMMY) - bukan hasil produksi Gaussian. Format meniru Gaussian 16; angka dari PySCF B3LYP/def2-SVP formaldehida ******
+ Entering Gaussian System, Link 0=g16
+ Gaussian 16:  ES64L-G16RevC.01 3-Jul-2019
+ ----------------------------------------------------------------------
+ # opt freq b3lyp/def2svp
+ ----------------------------------------------------------------------
+ Symbolic Z-matrix:
+ Charge =  0 Multiplicity = 1
+                         Standard orientation:                         
+ ---------------------------------------------------------------------
+ Center     Atomic      Atomic             Coordinates (Angstroms)
+ Number     Number       Type             X           Y           Z
+ ---------------------------------------------------------------------
+      1          6           0        0.000000    0.000000    0.000000
+      2          8           0        0.000000    0.000000    1.250000
+      3          1           0        0.000000    0.950000   -0.620000
+      4          1           0        0.000000   -0.950000   -0.620000
+ ---------------------------------------------------------------------
+ SCF Done:  E(RB3LYP) =  -114.411293234     A.U. after   12 cycles
+         Item               Value     Threshold  Converged?
+ Maximum Force            0.076812     0.000450     NO 
+ RMS     Force            0.028379     0.000300     NO 
+ Maximum Displacement     0.230436     0.001800     NO 
+ RMS     Displacement     0.056759     0.001200     NO 
+                         Standard orientation:                         
+ ---------------------------------------------------------------------
+ Center     Atomic      Atomic             Coordinates (Angstroms)
+ Number     Number       Type             X           Y           Z
+ ---------------------------------------------------------------------
+      1          6           0        0.000000   -0.007215   -0.004079
+      2          8           0       -0.000000    0.011074    1.196947
+      3          1           0        0.000000    0.947157   -0.582653
+      4          1           0       -0.000000   -0.951016   -0.599742
+ ---------------------------------------------------------------------
+ SCF Done:  E(RB3LYP) =  -114.415281972     A.U. after   12 cycles
+         Item               Value     Threshold  Converged?
+ Maximum Force            0.007091     0.000450     NO 
+ RMS     Force            0.003397     0.000300     NO 
+ Maximum Displacement     0.021272     0.001800     NO 
+ RMS     Displacement     0.006793     0.001200     NO 
+                         Standard orientation:                         
+ ---------------------------------------------------------------------
+ Center     Atomic      Atomic             Coordinates (Angstroms)
+ Number     Number       Type             X           Y           Z
+ ---------------------------------------------------------------------
+      1          6           0       -0.000000    0.016860    0.010496
+      2          8           0        0.000000   -0.025485    1.204792
+      3          1           0        0.000000    0.939160   -0.621938
+      4          1           0       -0.000000   -0.930312   -0.582375
+ ---------------------------------------------------------------------
+ SCF Done:  E(RB3LYP) =  -114.414795824     A.U. after   12 cycles
+         Item               Value     Threshold  Converged?
+ Maximum Force            0.013262     0.000450     NO 
+ RMS     Force            0.006290     0.000300     NO 
+ Maximum Displacement     0.039787     0.001800     NO 
+ RMS     Displacement     0.012579     0.001200     NO 
+                         Standard orientation:                         
+ ---------------------------------------------------------------------
+ Center     Atomic      Atomic             Coordinates (Angstroms)
+ Number     Number       Type             X           Y           Z
+ ---------------------------------------------------------------------
+      1          6           0       -0.000000    0.004475    0.005212
+      2          8           0        0.000000   -0.006526    1.204722
+      3          1           0        0.000000    0.943976   -0.604584
+      4          1           0       -0.000000   -0.941752   -0.594343
+ ---------------------------------------------------------------------
+ SCF Done:  E(RB3LYP) =  -114.415454609     A.U. after   12 cycles
+         Item               Value     Threshold  Converged?
+ Maximum Force            0.003661     0.000450     NO 
+ RMS     Force            0.001414     0.000300     NO 
+ Maximum Displacement     0.010984     0.001800     NO 
+ RMS     Displacement     0.002827     0.001200     NO 
+                         Standard orientation:                         
+ ---------------------------------------------------------------------
+ Center     Atomic      Atomic             Coordinates (Angstroms)
+ Number     Number       Type             X           Y           Z
+ ---------------------------------------------------------------------
+      1          6           0       -0.000000    0.000020    0.004527
+      2          8           0       -0.000000    0.000080    1.204045
+      3          1           0        0.000000    0.944885   -0.598519
+      4          1           0       -0.000000   -0.944885   -0.598509
+ ---------------------------------------------------------------------
+ SCF Done:  E(RB3LYP) =  -114.415497453     A.U. after   12 cycles
+         Item               Value     Threshold  Converged?
+ Maximum Force            0.000382     0.000450     YES
+ RMS     Force            0.000128     0.000300     YES
+ Maximum Displacement     0.001147     0.001800     YES
+ RMS     Displacement     0.000257     0.001200     YES
+                         Standard orientation:                         
+ ---------------------------------------------------------------------
+ Center     Atomic      Atomic             Coordinates (Angstroms)
+ Number     Number       Type             X           Y           Z
+ ---------------------------------------------------------------------
+      1          6           0       -0.000000    0.000032    0.004895
+      2          8           0       -0.000000    0.000051    1.204641
+      3          1           0        0.000000    0.944719   -0.598786
+      4          1           0       -0.000000   -0.944702   -0.598729
+ ---------------------------------------------------------------------
+ SCF Done:  E(RB3LYP) =  -114.415497675     A.U. after   9 cycles
+         Item               Value     Threshold  Converged?
+ Maximum Force            0.000109     0.000450     YES
+ RMS     Force            0.000042     0.000300     YES
+ Maximum Displacement     0.000327     0.001800     YES
+ RMS     Displacement     0.000085     0.001200     YES
+ Optimization completed.
+    -- Stationary point found.
+                         Standard orientation:                         
+ ---------------------------------------------------------------------
+ Center     Atomic      Atomic             Coordinates (Angstroms)
+ Number     Number       Type             X           Y           Z
+ ---------------------------------------------------------------------
+      1          6           0       -0.000000    0.000032    0.004895
+      2          8           0       -0.000000    0.000051    1.204641
+      3          1           0        0.000000    0.944719   -0.598786
+      4          1           0       -0.000000   -0.944702   -0.598729
+ ---------------------------------------------------------------------
+ Alpha  occ. eigenvalues -- -19.15405 -10.29037  -1.05378  -0.62656  -0.49553
+ Alpha  occ. eigenvalues --  -0.45228  -0.40645  -0.27103
+ Alpha virt. eigenvalues --  -0.04653   0.06652   0.13212   0.19527   0.44103
+ Alpha virt. eigenvalues --   0.45130   0.54071   0.58563   0.60711   0.66037
+ Alpha virt. eigenvalues --   0.88019   0.98397   1.09400   1.16239   1.28471
+ Alpha virt. eigenvalues --   1.43057   1.54487   1.60864   1.79716   1.84365
+ Alpha virt. eigenvalues --   1.90748   2.06212   2.48531   2.56662   2.58255
+ Alpha virt. eigenvalues --   2.68780   2.88693   3.12831   3.40306   3.56109
+ Dipole moment (field-independent basis, Debye):
+    X=  0.0000    Y=  -0.0000    Z=  -2.1240  Tot=  2.1240
+ Mulliken charges:
+               1
+     1  C   0.166473
+     2  O  -0.201935
+     3  H   0.017732
+     4  H   0.017730
+ Sum of Mulliken charges =   0.00000
+                      1                      2                      3
+                      A                      A                      A
+ Frequencies --              1193.0917              1265.0989              1530.1690
+ Red. masses --                 1.2000                 1.2000                 1.2000
+ Frc consts  --                 1.0000                 1.0000                 1.0000
+ IR Inten    --                 0.6000                 9.8000                11.9000
+  Atom  AN      X      Y      Z        X      Y      Z        X      Y      Z  
+     1   6   0.15  -0.00   0.00  -0.00  -0.13   0.00   0.00   0.00   0.00
+     2   8  -0.04  -0.00   0.00   0.00   0.07  -0.00   0.00  -0.00  -0.07
+     3   1  -0.59   0.00  -0.00   0.00   0.22   0.56  -0.00   0.34   0.58
+     4   1  -0.59   0.00  -0.00  -0.00   0.22  -0.56  -0.00  -0.34   0.58
+                      4                      5                      6
+                      A                      A                      A
+ Frequencies --              1862.8234              2866.9486              2926.1952
+ Red. masses --                 1.2000                 1.2000                 1.2000
+ Frc consts  --                 1.0000                 1.0000                 1.0000
+ IR Inten    --                89.3000                62.5000                71.0000
+  Atom  AN      X      Y      Z        X      Y      Z        X      Y      Z  
+     1   6   0.00  -0.00  -0.22  -0.00   0.00   0.06  -0.00  -0.10   0.00
+     2   8   0.00   0.00   0.15  -0.00  -0.00   0.00   0.00   0.00  -0.00
+     3   1  -0.00   0.16   0.07   0.00   0.59  -0.35   0.00   0.56  -0.35
+     4   1  -0.00  -0.16   0.07   0.00  -0.59  -0.35  -0.00   0.56   0.35
+ Zero-point correction=                           0.026528 (Hartree/Particle)
+ Thermal correction to Energy=                    0.029396
+ Thermal correction to Enthalpy=                  0.030340
+ Thermal correction to Gibbs Free Energy=         0.004861
+ Sum of electronic and zero-point Energies=           -114.388970
+ Sum of electronic and thermal Energies=              -114.386102
+ Sum of electronic and thermal Enthalpies=            -114.385158
+ Sum of electronic and thermal Free Energies=         -114.410637
+ Job cpu time:       0 days  0 hours  4 minutes 12.0 seconds.
+ Normal termination of Gaussian 16 at Fri Nov  6 08:54:00 2026.

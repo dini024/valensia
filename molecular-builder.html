@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Molecular Builder · DFT Studio</title>
+<meta name="description" content="Bangun molekul dari SMILES atau pustaka (PubChem, ChEMBL), depiksi 2D, deskriptor, seri substituen, struktur 3D + pre-optimasi, lalu lanjut ke input ORCA/Gaussian.">
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/molbuilder.css">
+</head>
+<body>
+<main class="container" id="app">
+  <section class="hero">
+    <h1>Molecular Builder</h1>
+    <p class="lead">SMILES → 2D → 3D + pre-optimasi (RDKit.js + force field ringan), lalu lanjut ke Input Builder ORCA / Gaussian. Semua dijalankan di browser; backend RDKit penuh (ETKDG + MMFF94) bersifat opsional.</p>
+  </section>
+
+  <div id="wb" class="card">
+    <div class="tabs" role="tablist">
+      <button class="tab active" data-tab="t-build">1 · Molecule builder</button>
+      <button class="tab" data-tab="t-orca">2 · ORCA input</button>
+      <button class="tab" data-tab="t-gauss">3 · Gaussian input</button>
+    </div>
+
+    <!-- ===================== TAB 1 ===================== -->
+    <div id="t-build" class="tab-panel active">
+      <div class="mb-layout">
+        <div class="mb-left">
+
+          <h3>Pustaka molekul</h3>
+          <div class="form-grid">
+            <div class="field"><label for="lib-src">Sumber</label>
+              <select id="lib-src">
+                <option value="local">Library lokal (±26 molekul)</option>
+                <option value="pubchem">PubChem (PUG REST)</option>
+                <option value="chembl">ChEMBL (REST)</option>
+              </select></div>
+            <div class="field"><label for="lib-q">Kata kunci</label><input type="text" id="lib-q" placeholder="mis. aspirin, azobenzene, coumarin"></div>
+          </div>
+          <div class="row">
+            <button class="btn primary" id="lib-go">Cari di pustaka</button>
+            <button class="btn" id="lib-local">Tampilkan library lokal</button>
+            <span class="small muted">Lainnya: <a href="https://pubchem.ncbi.nlm.nih.gov/" target="_blank" rel="noopener">PubChem</a> · <a href="https://www.ebi.ac.uk/chembl/" target="_blank" rel="noopener">ChEMBL</a> · <a href="https://zinc.docking.org/" target="_blank" rel="noopener">ZINC</a> (tempel SMILES hasilnya di bawah)</span>
+          </div>
+          <div id="lib-status" class="small muted" role="status"></div>
+          <div id="lib-res" class="lib-res"></div>
+
+          <h3 style="margin-top:22px">SMILES → molekul</h3>
+          <div class="field"><label for="smi">SMILES</label><textarea id="smi" rows="2" spellcheck="false">c1ccc(cc1)/N=N/c1ccccc1</textarea></div>
+          <div class="form-grid">
+            <div class="field"><label for="mname">Nama molekul</label><input type="text" id="mname" value="azobenzena"></div>
+          </div>
+          <div class="row">
+            <button class="btn primary" id="btn-build">Bangun 2D + deskriptor</button>
+            <button class="btn" id="btn-copy-smi">Salin SMILES kanonik</button>
+            <button class="btn" id="btn-csv-desc">Ekspor deskriptor (CSV)</button>
+          </div>
+          <div class="chips" id="examples" style="margin-top:10px"></div>
+          <div id="build-msg" role="status"></div>
+
+          <h3 style="margin-top:26px">Desain seri substituen</h3>
+          <p class="small muted">Core SMILES harus memuat <b>tepat satu</b> titik sambung <code>[*]</code>. Substituen ditulis sebagai SMILES yang dimulai dari atom penyambung (mis. <code>OC</code>, <code>C#N</code>, <code>C(=O)O</code>). Pisahkan dengan spasi, koma, atau baris baru.</p>
+          <div class="field"><label for="core">Core / scaffold</label><input type="text" id="core" class="mono" value="c1ccc(cc1)/N=N/c1ccc([*])cc1"></div>
+          <div class="field"><label for="subs">Substituen</label><textarea id="subs" rows="2" class="mono" spellcheck="false">H F Cl Br OC C#N C(=O)O N(C)C [N+](=O)[O-] C(F)(F)F</textarea></div>
+          <div class="row">
+            <button class="btn primary" id="btn-enum">Enumerasi kandidat</button>
+            <button class="btn" id="btn-enum-csv">Unduh CSV</button>
+            <button class="btn" id="btn-enum-3d">3D semua → seri batch Input Builder</button>
+          </div>
+          <div id="enum-msg" role="status" class="small"></div>
+          <div class="tablewrap" id="enum-wrap" style="margin-top:10px;display:none"><table class="t" id="enum-tbl"></table></div>
+        </div>
+
+        <div class="mb-right">
+          <div class="card inner">
+            <h3>Struktur 2D</h3>
+            <div id="depict" class="depict"><span class="muted small">Belum ada struktur.</span></div>
+            <dl class="kv" id="desc"></dl>
+            <div class="small muted" id="desc-note">Deskriptor ini adalah deskriptor struktural (RDKit), <b>bukan</b> hasil DFT.</div>
+            <div class="row" style="margin-top:8px"><button class="btn sm" id="btn-json">Ekspor JSON</button></div>
+          </div>
+
+          <div class="card inner">
+            <h3>Struktur 3D</h3>
+            <div class="form-grid">
+              <div class="field"><label for="nconf">Jumlah konformer dicoba</label><input type="number" id="nconf" min="1" max="12" value="3"></div>
+              <div class="field"><label for="vstyle">Gaya tampilan</label>
+                <select id="vstyle"><option value="ballstick">Ball &amp; stick</option><option value="sticks">Sticks</option><option value="spheres">Spheres</option><option value="lines">Lines</option></select></div>
+            </div>
+            <div class="field inline"><input type="checkbox" id="use-backend"><label for="use-backend">Pakai backend (RDKit ETKDGv3 + MMFF94) — <span id="backend-hint" class="muted"></span></label></div>
+            <div class="row">
+              <button class="btn primary" id="btn-3d">Generate 3D + pre-optimize</button>
+              <button class="btn" id="btn-xyz" disabled>Unduh XYZ</button>
+              <button class="btn" id="btn-sdf" disabled>Unduh SDF</button>
+            </div>
+            <div id="msg3d" role="status" class="small" style="margin-top:8px"></div>
+            <div class="viewer mbview" id="v3d"><div class="vlabel">Tekan “Generate 3D + pre-optimize”.</div></div>
+            <div class="form-grid" style="margin-top:10px">
+              <div class="field"><label for="confsel">Konformer</label><select id="confsel" disabled></select></div>
+              <div class="field"><label for="mcharge">Muatan</label><input type="number" id="mcharge" value="0" step="1"></div>
+              <div class="field"><label for="mmult">Multiplisitas (2S+1)</label><input type="number" id="mmult" value="1" min="1" step="1"></div>
+            </div>
+            <div id="elec" class="small muted"></div>
+            <div class="row" style="margin-top:10px">
+              <button class="btn good go-input" data-eng="orca" disabled>Lanjut → ORCA input</button>
+              <button class="btn good go-input" data-eng="gaussian" disabled>Lanjut → Gaussian input</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== TAB 2 / 3 ===================== -->
+    <div id="t-orca" class="tab-panel">
+      <h3>Lanjut ke input ORCA</h3>
+      <div class="handoff-sum" data-eng="orca"></div>
+      <p class="small muted">Input Builder memuat molekul ini otomatis, lalu Anda memilih job (opt/freq/TDDFT…), fungsional, basis set, dan pelarut. Hasil dapat dikirim ke ORCA Docker Workbench.</p>
+      <div class="row"><button class="btn good go-input" data-eng="orca" disabled>Buka Input Builder (ORCA)</button></div>
+    </div>
+    <div id="t-gauss" class="tab-panel">
+      <h3>Lanjut ke input Gaussian</h3>
+      <div class="handoff-sum" data-eng="gaussian"></div>
+      <p class="small muted">Input Builder memuat molekul ini otomatis dan membuka tab Gaussian (route section, %chk, TD-DFT, pelarut, dll.).</p>
+      <div class="row"><button class="btn good go-input" data-eng="gaussian" disabled>Buka Input Builder (Gaussian)</button></div>
+    </div>
+  </div>
+  <p class="small muted">Dibangun dengan RDKit.js (SMILES, depiksi, deskriptor), force field ringan di browser (3D + pre-optimasi), dan 3Dmol.js. Struktur hasil pre-optimasi adalah titik awal — <b>selalu</b> optimasi ulang dengan DFT dan periksa geometri sebelum perhitungan ilmiah.</p>
+</main>
+<script src="assets/js/common.js"></script>
+<script src="assets/js/plot.js"></script>
+<script src="assets/js/molbuilder.js"></script>
+</body>
+</html>

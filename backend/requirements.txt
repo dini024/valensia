@@ -1,0 +1,8 @@
+fastapi>=0.110
+uvicorn[standard]>=0.29
+pydantic>=2.5
+# opsional: endpoint /api/molecule/embed
+rdkit>=2023.9
+# uji
+pytest>=8
+httpx>=0.27

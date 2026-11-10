@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Modul Kuliah — Computational Chemistry &amp; DFT</title>
+<meta name="description" content="Modul interaktif computational chemistry dan Density Functional Theory: dari persamaan Schrödinger hingga SCF, fungsional, basis set, optimasi geometri, dan TDDFT.">
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/course.css">
+</head>
+<body>
+<div class="container">
+  <div class="hero">
+    <span class="pill">Modul interaktif · Bahasa Indonesia</span>
+    <h1>Computational Chemistry &amp; Density Functional Theory</h1>
+    <p class="lead">Dari persamaan Schrödinger sampai spektrum TDDFT — semua grafik di halaman ini dihitung langsung di browser Anda (bukan gambar statis). Geser slider, klik, dan lihat apa yang berubah.</p>
+  </div>
+
+  <div class="sidebar-layout">
+    <aside><nav class="toc card" id="toc" style="padding:10px"></nav></aside>
+    <main>
+
+<!-- ============ 0 ============ -->
+<section id="s0" class="card" data-title="0 · Mengapa simulasi penting">
+  <h2>0 · Mengapa hasil simulasi komputasi sekarang sangat penting?</h2>
+  <p>Dua dekade terakhir, simulasi tidak lagi sekadar “pelengkap” eksperimen. Basis data DFT skala besar, model machine-learning yang dilatih dari data kuantum, dan perangkat lunak yang mudah diakses (mis. ORCA) mengubah cara kita menemukan molekul dan material. Berikut makalah dan penghargaan kunci yang bisa Anda baca sendiri (semua tautan DOI dapat diklik).</p>
+  <div class="row" style="margin-bottom:10px"><span class="muted small">Filter:</span><div class="chips" id="paper-filter"></div></div>
+  <div class="grid g3" id="paper-cards"></div>
+  <h3 style="margin-top:26px">Eksperimen vs simulasi: apa yang masing-masing berikan?</h3>
+  <p class="muted small">Perbandingan kualitatif (bukan statistik). Klik filter untuk melihat sisi yang Anda butuhkan.</p>
+  <div class="chips" id="cmp-filter" style="margin-bottom:8px"></div>
+  <div class="tablewrap"><table class="t" id="cmp-table"></table></div>
+  <div class="callout"><b>Pesan utamanya:</b> simulasi paling kuat ketika dipakai bersama eksperimen — untuk <i>menyaring</i> kandidat sebelum sintesis, menjelaskan <i>mengapa</i> sebuah hasil terjadi, dan memberi akses ke besaran yang sulit diukur (keadaan transisi, orbital, distribusi muatan).</div>
+</section>
+
+<!-- ============ 1 ============ -->
+<section id="s1" class="card" data-title="1 · Persamaan Schrödinger">
+  <h2>1 · Persamaan Schrödinger: apa yang sebenarnya dipecahkan?</h2>
+  <div class="eq">Ĥ Ψ = E Ψ &nbsp;,&nbsp; Ĥ = −½∇² + V(r)  <span class="muted small">(satuan atom)</span></div>
+  <p>Solusinya, fungsi gelombang Ψ, tidak bisa diamati langsung; yang bermakna fisik adalah <b>|Ψ|²</b> — kerapatan peluang menemukan elektron. Energi hanya boleh bernilai diskret (terkuantisasi). Mulai dari sistem paling sederhana.</p>
+  <h3>1a · Partikel dalam kotak 1D</h3>
+  <div class="grid g3">
+    <div>
+      <div class="field"><label>Bilangan kuantum n = <b id="box-nv">1</b></label><input type="range" id="box-n" min="1" max="8" value="1"></div>
+      <div id="box-info" class="small muted"></div>
+      <div id="box-E"></div>
+    </div>
+    <div><div id="box-psi"></div></div>
+    <div><div id="box-prob"></div></div>
+  </div>
+  <p class="small muted">Perhatikan: semakin tinggi n, semakin banyak <i>node</i> (titik ψ = 0) dan semakin tinggi energi (E ∝ n²). Pola yang sama muncul pada orbital atom dan molekul.</p>
+
+  <h3>1b · Atom hidrogen: orbital sebagai awan peluang</h3>
+  <div class="grid g2">
+    <div>
+      <div class="row">
+        <div class="field" style="min-width:180px"><label>Orbital</label>
+          <select id="h-orb"><option value="1s">1s</option><option value="2s">2s</option><option value="2p">2p</option><option value="3d">3d (m=0)</option></select></div>
+        <button class="btn" id="h-resample">Ambil sampel baru</button>
+      </div>
+      <canvas id="h-cloud" width="520" height="520" style="width:100%;max-width:520px;border:1px solid var(--line);border-radius:10px;background:var(--surface2)"></canvas>
+      <div class="small muted" id="h-info">Titik = hasil sampling Monte-Carlo dari |ψ|² (proyeksi pada bidang x–z, z vertikal).</div>
+    </div>
+    <div><div id="h-chart"></div><p class="small muted">P(r)=r²R²(r): peluang menemukan elektron pada jarak r (a₀). Puncak 1s tepat di r = 1 a₀ (jari-jari Bohr).</p></div>
+  </div>
+</section>
+
+<!-- ============ 2 ============ -->
+<section id="s2" class="card" data-title="2 · Mengapa banyak elektron sulit">
+  <h2>2 · Mengapa persamaan itu “tidak bisa” dipakai untuk banyak elektron?</h2>
+  <p>Untuk H dan He⁺ solusinya eksak. Mulai dari dua elektron muncul suku tolakan <b>1/|rᵢ − rⱼ|</b> yang mengikat semua elektron — Ψ tak lagi bisa dipisah menjadi hasil kali fungsi satu-elektron. Empat visual berikut menunjukkan akar masalahnya.</p>
+
+  <h3>2a · Setiap elektron “berbicara” dengan semua elektron lain</h3>
+  <div class="grid g2">
+    <div>
+      <div class="field"><label>Jumlah elektron N = <b id="cg-nv">6</b></label><input type="range" id="cg-n" min="2" max="30" value="6"></div>
+      <canvas id="cg-canvas" width="460" height="420" style="width:100%;max-width:460px;border:1px solid var(--line);border-radius:10px;background:var(--surface2)"></canvas>
+    </div>
+    <div id="cg-info" class="callout"></div>
+  </div>
+
+  <h3>2b · Dinding eksponensial: menyimpan Ψ di grid</h3>
+  <div class="grid g2">
+    <div>
+      <div class="field"><label>Titik grid per sumbu</label><select id="wall-g"><option value="10">10</option><option value="20">20</option><option value="50">50</option></select></div>
+      <div id="wall-chart"></div>
+    </div>
+    <div id="wall-info"></div>
+  </div>
+
+  <h3>2c · Biaya metode: skala terhadap ukuran sistem</h3>
+  <div class="grid g2">
+    <div>
+      <div class="row">
+        <div class="field"><label>Waktu 1 siklus pada 100 basis function (detik)</label><input type="number" id="sc-t0" value="1" min="0.001" step="0.1"></div>
+      </div>
+      <div id="sc-chart"></div>
+    </div>
+    <div>
+      <div class="form-grid">
+        <div class="field"><label>Jumlah basis function (n)</label><input type="number" id="sc-n" value="400" min="10" step="10"></div>
+        <div class="field"><label>Jumlah elektron (N<sub>e</sub>)</label><input type="number" id="sc-ne" value="100" min="2" step="2"></div>
+      </div>
+      <div id="sc-table"></div>
+    </div>
+  </div>
+
+  <h3>2d · Antisimetri (Pauli): Ψ harus berganti tanda saat dua elektron bertukar</h3>
+  <div class="grid g2">
+    <div>
+      <div class="row">
+        <div class="field"><label>Bentuk fungsi</label><select id="pa-mode"><option value="anti">Antisimetris (fermion) ψa(1)ψb(2) − ψb(1)ψa(2)</option><option value="sym">Simetris (boson)</option><option value="prod">Hasil kali sederhana ψa(1)ψb(2)</option></select></div>
+      </div>
+      <canvas id="pa-canvas" width="440" height="440" style="width:100%;max-width:440px;border:1px solid var(--line);border-radius:10px"></canvas>
+    </div>
+    <div id="pa-info" class="callout"></div>
+  </div>
+</section>
+
+<!-- ============ 3 ============ -->
+<section id="s3" class="card" data-title="3 · Hohenberg–Kohn">
+  <h2>3 · Terobosan DFT: cukup kerapatan elektron ρ(r)</h2>
+  <div class="grid g2">
+    <div class="callout"><b>Ψ</b>: 3N variabel (3N koordinat spasial + spin).<br>Untuk benzena (42 elektron) → <b>126</b> dimensi.<br><br><b>ρ(r)</b>: hanya <b>3</b> variabel (x, y, z), berapa pun jumlah elektronnya.</div>
+    <div>
+      <div class="eq">ρ(r) = N ∫ |Ψ(r, r₂, …, r<sub>N</sub>)|² dr₂ … dr<sub>N</sub></div>
+    </div>
+  </div>
+  <h3>Teorema Hohenberg–Kohn (1964)</h3>
+  <ol>
+    <li><b>Teorema 1 (keberadaan):</b> potensial eksternal v(r) — dan karena itu seluruh sifat keadaan dasar — ditentukan secara unik (hingga konstanta) oleh ρ₀(r).</li>
+    <li><b>Teorema 2 (variasional):</b> E[ρ] ≥ E₀ untuk setiap ρ ≥ 0 dengan ∫ρ = N; minimum dicapai di ρ₀.</li>
+  </ol>
+  <h3>Eksplorasi: kerapatan elektron model molekul</h3>
+  <p class="small muted">Model sederhana (jumlah kerapatan bentuk-1s per kulit atom; bukan hasil DFT) — cukup untuk melihat bahwa <i>puncak ρ ada di inti</i> dan bahwa ikatan = akumulasi ρ di antara inti. Seret atom dengan mouse.</p>
+  <div class="grid g2">
+    <div>
+      <div class="row">
+        <div class="field"><label>Molekul</label><select id="den-preset"><option value="h2">H₂</option><option value="h2o" selected>H₂O</option><option value="benz">Benzena (π tidak dimodelkan)</option></select></div>
+        <div class="field" style="flex:1;min-width:180px"><label>Skala geometri = <b id="den-sv">1.00</b>×</label><input type="range" id="den-scale" min="0.6" max="2.0" step="0.01" value="1"></div>
+      </div>
+      <canvas id="den-canvas" width="520" height="440" style="width:100%;max-width:520px;border:1px solid var(--line);border-radius:10px;touch-action:none;cursor:grab"></canvas>
+      <div class="small muted" id="den-info"></div>
+    </div>
+    <div>
+      <div class="field"><label>Inti untuk uji cusp</label><select id="den-atom"></select></div>
+      <div id="cusp-chart"></div>
+      <p class="small muted">Kondisi cusp Kato: dρ/dr / ρ → <b>−2Z</b> di inti. Artinya ρ(r) sendiri “mengetahui” lokasi inti dan muatan Z-nya — inilah intuisi di balik Teorema 1: dari ρ kita bisa membaca v(r), jadi Hamiltonian, jadi semuanya.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 4 ============ -->
+<section id="s4" class="card" data-title="4 · Kohn–Sham">
+  <h2>4 · Kohn–Sham: sistem “palsu” yang memberi ρ yang benar</h2>
+  <p>HK memberi jaminan keberadaan, tetapi tidak memberi fungsional E[ρ] yang bisa dipakai (energi kinetik sulit ditulis dari ρ). Kohn dan Sham (1965) memperkenalkan elektron <b>tak berinteraksi</b> yang memiliki kerapatan yang sama dengan sistem nyata:</p>
+  <div id="ks-diagram"></div>
+  <div class="eq">E[ρ] = T<sub>s</sub>[ρ] + ∫ v<sub>ext</sub> ρ dr + E<sub>H</sub>[ρ] + E<sub>xc</sub>[ρ]</div>
+  <div class="eq">[ −½∇² + v<sub>ext</sub>(r) + v<sub>H</sub>[ρ](r) + v<sub>xc</sub>[ρ](r) ] φᵢ = εᵢ φᵢ ,  ρ = Σ|φᵢ|²</div>
+  <p>Semua yang “sulit” (pertukaran, korelasi, sisa energi kinetik) dikumpulkan di <b>E<sub>xc</sub></b> — satu-satunya bagian yang harus diaproksimasi. Itulah mengapa ada ratusan fungsional.</p>
+  <h3>Dekomposisi energi dari model 1D (dihitung oleh kode SCF pada bagian 5)</h3>
+  <div class="grid g2">
+    <div>
+      <div class="row">
+        <div class="field"><label>Sistem</label><select id="ks-sys"><option value="a2">Atom 2 elektron (Z=2)</option><option value="a4" selected>Atom 4 elektron (Z=4)</option><option value="a6">Atom 6 elektron (Z=6)</option><option value="m4">Molekul 2 inti, 4 elektron</option></select></div>
+        <div class="field" style="flex:1;min-width:170px"><label>Jarak inti (molekul) = <b id="ks-dv">3.0</b></label><input type="range" id="ks-d" min="0.5" max="8" step="0.1" value="3"></div>
+      </div>
+      <div id="ks-bars"></div>
+    </div>
+    <div><div id="ks-dens"></div><div id="ks-info" class="small muted"></div></div>
+  </div>
+  <p class="small muted">Catatan: T<sub>s</sub> adalah energi kinetik sistem tak berinteraksi, bukan energi kinetik sebenarnya; selisih keduanya ikut dimasukkan ke E<sub>xc</sub>. Model 1D memakai interaksi soft-Coulomb 1/√(x²+1) agar stabil secara numerik.</p>
+</section>
+
+<!-- ============ 5 ============ -->
+<section id="s5" class="card" data-title="5 · Siklus SCF">
+  <h2>5 · Siklus Self-Consistent Field (SCF) — dijalankan sungguhan</h2>
+  <p>Potensial v<sub>eff</sub> bergantung pada ρ, sedangkan ρ dihitung dari orbital yang diperoleh dari v<sub>eff</sub> → persamaan <i>self-consistent</i>: ulangi sampai ρ masukan = ρ keluaran. Di bawah, model Kohn–Sham 1D (grid 160 titik) benar-benar diselesaikan di browser Anda tiap iterasi (diagonalisasi Hamiltonian tridiagonal).</p>
+  <div class="grid g2">
+    <div>
+      <div class="form-grid">
+        <div class="field"><label>Sistem</label><select id="scf-sys"><option value="atom">Atom (1 inti)</option><option value="mol">Molekul (2 inti, jarak 3)</option></select></div>
+        <div class="field"><label>Jumlah elektron</label><select id="scf-n"><option>2</option><option selected>4</option><option>6</option><option>8</option></select></div>
+        <div class="field"><label>Iterasi maks.</label><input type="number" id="scf-max" value="60" min="5" max="200"></div>
+      </div>
+      <div class="field"><label>Faktor mixing α = <b id="scf-av">0.50</b> <span class="muted small">(ρ<sub>in</sub> ← ρ<sub>in</sub> + α(ρ<sub>out</sub> − ρ<sub>in</sub>))</span></label><input type="range" id="scf-alpha" min="0.05" max="1" step="0.01" value="0.5"></div>
+      <div class="field inline"><input type="checkbox" id="scf-diis"><label for="scf-diis" style="color:var(--ink)">Aktifkan DIIS (Pulay) — ekstrapolasi dari riwayat residual</label></div>
+      <div class="row">
+        <button class="btn" id="scf-step">⏭ Langkah</button>
+        <button class="btn primary" id="scf-play">▶ Jalankan</button>
+        <button class="btn" id="scf-run">⏩ Sampai selesai</button>
+        <button class="btn" id="scf-reset">↺ Reset</button>
+        <button class="btn good" id="scf-cmp">Eksperimen otomatis</button>
+      </div>
+      <div class="grid g4" style="margin-top:12px" id="scf-stats"></div>
+      <div id="scf-status" class="small muted" style="margin-top:8px"></div>
+    </div>
+    <div><div id="scf-flow"></div></div>
+  </div>
+  <div class="grid g2" style="margin-top:14px">
+    <div><div id="scf-E"></div></div>
+    <div><div id="scf-conv"></div></div>
+    <div><div id="scf-rho"></div></div>
+    <div><div id="scf-eps"></div></div>
+  </div>
+  <div id="scf-cmp-out"></div>
+  <div class="callout warn"><b>Coba ini:</b> pilih <i>Atom, 6 elektron</i>, α = 0.5 tanpa DIIS → energi berosilasi dan tidak konvergen (charge sloshing). Turunkan α ke ~0.1: konvergen tetapi lambat. Lalu aktifkan DIIS dengan α = 0.5: konvergen dalam belasan iterasi. Tombol “Eksperimen otomatis” menjalankan ketiganya sekaligus.</div>
+</section>
+
+<!-- ============ 6 ============ -->
+<section id="s6" class="card" data-title="6 · Fungsional XC">
+  <h2>6 · Fungsional exchange–correlation &amp; “Tangga Yakub” (Jacob’s ladder)</h2>
+  <p>Perkembangan fungsional dapat dilihat sebagai tangga: makin tinggi anak tangga, makin banyak informasi masuk (dan biasanya makin mahal).</p>
+  <div id="ladder"></div>
+  <h3>Faktor peningkatan exchange F<sub>x</sub>(s)</h3>
+  <p class="small muted">E<sub>x</sub> = ∫ ρ ε<sub>x</sub><sup>LDA</sup> F<sub>x</sub>(s) dr, dengan s = |∇ρ|/(2k<sub>F</sub>ρ) mengukur seberapa cepat ρ berubah. LDA: F<sub>x</sub> = 1. GGA menambah koreksi gradien, dibatasi Lieb–Oxford (1.804).</p>
+  <div id="fx-chart"></div>
+  <h3>Pemisahan jarak-jauh (range separation)</h3>
+  <div class="grid g2">
+    <div>
+      <div class="field"><label>Parameter μ (bohr⁻¹) = <b id="rs-mv">0.33</b> <span class="muted small">(CAM-B3LYP: 0.33; ωB97X-D: 0.2)</span></label><input type="range" id="rs-mu" min="0.05" max="1" step="0.01" value="0.33"></div>
+      <div id="rs-chart"></div>
+    </div>
+    <div class="callout">1/r = erfc(μr)/r + erf(μr)/r.<br>Fungsional <b>range-separated hybrid</b> memakai DFT untuk suku jarak-pendek, dan pertukaran Hartree–Fock eksak untuk suku jarak-jauh. Hasilnya: perilaku −1/R yang benar untuk eksitasi <i>charge-transfer</i> (lihat bagian 9).</div>
+  </div>
+  <h3>Pilihan praktis</h3>
+  <div class="tablewrap"><table class="t" id="fx-table"></table></div>
+</section>
+
+<!-- ============ 7 ============ -->
+<section id="s7" class="card" data-title="7 · Basis set">
+  <h2>7 · Basis set: bagaimana orbital dibangun dari fungsi Gaussian</h2>
+  <p>Orbital φ dikembangkan dalam fungsi basis. Orbital Slater (e<sup>−ζr</sup>) benar secara fisik (cusp di inti, ekor eksponensial), tetapi integralnya sulit. Gaussian (e<sup>−αr²</sup>) murah dihitung, tetapi tidak punya cusp dan meluruh terlalu cepat — jadi beberapa Gaussian digabung. Di bawah, orbital 1s Slater <i>dicocokkan</i> dengan n Gaussian via kuadrat-terkecil (eksponen dicari secara numerik).</p>
+  <div class="grid g2">
+    <div>
+      <div class="field"><label>Jumlah Gaussian primitif n = <b id="sto-nv">3</b></label><input type="range" id="sto-n" min="1" max="6" value="3"></div>
+      <div id="sto-chart"></div>
+      <div id="sto-info" class="small muted"></div>
+    </div>
+    <div><div id="sto-chart2"></div></div>
+  </div>
+  <h3>Keluarga basis set</h3>
+  <div class="tablewrap"><table class="t" id="bs-table"></table></div>
+  <div class="grid g3" style="margin-top:14px">
+    <div class="callout"><b>Anion / ikatan hidrogen</b><br>Perlu fungsi diffuse: <code>+</code>/<code>++</code>, <code>aug-</code>, <code>ma-def2-</code>, <code>def2-TZVPD</code>.</div>
+    <div class="callout"><b>Keadaan tereksitasi (TDDFT)</b><br>Minimal double-ζ + polarisasi + diffuse untuk eksitasi Rydberg/CT: mis. 6-311+G(d,p), def2-TZVP.</div>
+    <div class="callout"><b>Logam berat</b><br>Pakai ECP (def2-… otomatis ECP untuk Z&gt;36) atau basis relativistik (SARC, ZORA/DKH).</div>
+  </div>
+</section>
+
+<!-- ============ 8 ============ -->
+<section id="s8" class="card" data-title="8 · PES, optimasi, frekuensi">
+  <h2>8 · Permukaan energi potensial, optimasi geometri, dan frekuensi</h2>
+  <p>Di bawah pendekatan Born–Oppenheimer, energi adalah fungsi posisi inti: <b>E(R)</b>. Optimasi geometri = mencari titik stasioner (∇E = 0). Hessian (turunan kedua) menentukan sifat titik itu.</p>
+  <h3>8a · Optimasi di permukaan Müller–Brown</h3>
+  <div class="grid g2">
+    <div>
+      <div class="row">
+        <div class="field"><label>Algoritma</label><select id="pes-method"><option value="sd">Steepest descent</option><option value="bfgs" selected>Quasi-Newton (BFGS)</option><option value="newton">Newton–Raphson (cari titik pelana)</option></select></div>
+        <button class="btn" id="pes-clear">Hapus jejak</button>
+      </div>
+      <canvas id="pes-canvas" width="540" height="440" style="width:100%;max-width:540px;border:1px solid var(--line);border-radius:10px;cursor:crosshair"></canvas>
+      <div class="small muted">Klik di permukaan untuk memilih titik awal. Warna gelap = energi rendah. Lingkaran putih = minimum, segitiga = titik pelana (TS).</div>
+    </div>
+    <div>
+      <div id="pes-info" class="callout">Klik titik awal pada peta…</div>
+      <div id="pes-chart"></div>
+    </div>
+  </div>
+  <h3>8b · Frekuensi vibrasi = kelengkungan permukaan</h3>
+  <div class="grid g2">
+    <div>
+      <div class="form-grid">
+        <div class="field"><label>D<sub>e</sub> (Eh) = <b id="mo-Dv">0.175</b></label><input type="range" id="morse-D" min="0.05" max="0.4" step="0.005" value="0.175"></div>
+        <div class="field"><label>a (bohr⁻¹) = <b id="mo-av">1.00</b></label><input type="range" id="morse-a" min="0.5" max="2" step="0.01" value="1"></div>
+        <div class="field"><label>Massa tereduksi μ (amu) = <b id="mo-mv">0.50</b></label><input type="range" id="morse-mu" min="0.5" max="12" step="0.1" value="0.5"></div>
+      </div>
+      <div id="morse-chart"></div>
+      <div id="morse-info" class="small"></div>
+    </div>
+    <div>
+      <div class="field"><label>Tinggi penghalang V‡ (kcal/mol) = <b id="ts-bv">20</b></label><input type="range" id="ts-b" min="2" max="60" step="1" value="20"></div>
+      <div id="ts-chart"></div>
+      <div id="ts-info" class="small"></div>
+    </div>
+  </div>
+  <div class="callout ok"><b>Checklist setelah optimasi:</b> lakukan perhitungan frekuensi pada level yang sama. <b>0</b> frekuensi imajiner → minimum lokal. <b>1</b> frekuensi imajiner → keadaan transisi. ≥2 → bukan struktur yang diinginkan; ikuti mode imajiner dan optimasi ulang. Frekuensi juga memberi ZPE, entalpi, entropi, dan energi bebas Gibbs.</div>
+</section>
+
+<!-- ============ 9 ============ -->
+<section id="s9" class="card" data-title="9 · TDDFT & spektrum">
+  <h2>9 · TDDFT dan spektrum serapan</h2>
+  <p>TDDFT memberi daftar eksitasi vertikal: energi (eV atau nm) dan <b>kekuatan osilator f</b>. Tiap eksitasi adalah garis (stick); spektrum yang kita lihat adalah garis-garis itu <i>di-broadening</i> (Gaussian/Lorentzian) untuk meniru efek vibronik (Franck–Condon), pelarut, dan lebar alami.</p>
+  <div class="grid g2">
+    <div>
+      <div class="field"><label>Data eksitasi (satu baris: <code>E(eV)  f</code>) — bisa diedit</label>
+        <textarea id="td-data" rows="6">2.45 0.85
+3.10 0.12
+3.65 0.40
+4.20 0.25</textarea></div>
+      <div class="form-grid">
+        <div class="field"><label>FWHM (eV) = <b id="td-fv">0.30</b></label><input type="range" id="td-fwhm" min="0.05" max="0.8" step="0.01" value="0.3"></div>
+        <div class="field"><label>Bentuk puncak</label><select id="td-shape"><option value="g">Gaussian</option><option value="l">Lorentzian</option></select></div>
+      </div>
+      <div class="small muted">ε = (2.315×10⁸ · f) / (σ̃√2π) untuk puncak Gaussian, σ̃ dalam cm⁻¹ (dari f = 4.319×10⁻⁹ ∫ε dν̃).</div>
+      <div id="td-table" style="margin-top:10px"></div>
+    </div>
+    <div><div id="td-chart"></div></div>
+  </div>
+  <div class="grid g3" style="margin-top:12px">
+    <div class="card" style="margin:0"><h3>Konverter energi ↔ panjang gelombang</h3>
+      <div class="form-grid"><div class="field"><label>E (eV)</label><input type="number" id="cv-ev" value="2.45" step="0.01"></div><div class="field"><label>λ (nm)</label><input type="number" id="cv-nm" step="1"></div></div>
+      <div class="small muted" id="cv-out"></div></div>
+    <div class="card" style="margin:0;grid-column:span 2"><h3>Mengapa pure GGA gagal pada eksitasi charge-transfer?</h3>
+      <div class="grid g2"><div>
+        <div class="form-grid"><div class="field"><label>IP donor (eV)</label><input type="number" id="ct-ip" value="7.0" step="0.1"></div><div class="field"><label>EA akseptor (eV)</label><input type="number" id="ct-ea" value="1.5" step="0.1"></div></div>
+        <div class="small muted">Eksitasi CT jarak-jauh yang benar ≈ IP − EA − 1/R. Fungsional lokal/hybrid global tidak punya −1/R sehingga energinya hampir konstan terhadap R (terlalu rendah — “ghost state”). Range-separated (CAM-B3LYP, ωB97X-D) memulihkan perilaku ini. Kurva di samping adalah <b>ilustrasi dari rumus</b>, bukan hasil perhitungan.</div></div>
+        <div id="ct-chart"></div></div></div>
+  </div>
+</section>
+
+<!-- ============ 10 ============ -->
+<section id="s10" class="card" data-title="10 · Alur kerja praktis">
+  <h2>10 · Alur kerja praktis &amp; rekomendasi metode</h2>
+  <div id="wf"></div>
+  <div class="row" style="margin:12px 0">
+    <a class="btn primary" href="molecular-builder.html">① Molecular Builder</a>
+    <a class="btn primary" href="input-builder.html">② Input Builder</a>
+    <a class="btn primary" href="results-analyzer.html">③ Results Analyzer</a>
+    <a class="btn" href="orca-docker.html">ORCA Docker</a>
+  </div>
+  <h3>Rekomendasi metode</h3>
+  <div class="grid g2">
+    <div>
+      <div class="form-grid">
+        <div class="field"><label>Tujuan</label><select id="rc-task"><option value="opt">Optimasi geometri + frekuensi</option><option value="sp">Energi tunggal / HOMO–LUMO / IP–EA</option><option value="td">Spektrum serapan (TDDFT)</option><option value="nci">Interaksi non-kovalen</option><option value="pbc">Padatan periodik (band gap/DOS)</option></select></div>
+        <div class="field"><label>Jenis sistem</label><select id="rc-sys"><option value="org">Molekul organik netral / pewarna</option><option value="anion">Anion / interaksi H-bond</option><option value="metal">Kompleks logam transisi</option><option value="heavy">Mengandung unsur berat (Z&gt;36, mis. I, Pb, Ru)</option></select></div>
+        <div class="field"><label>Pelarut</label><select id="rc-solv"><option value="">Fase gas</option><option>Ethanol</option><option>Acetonitrile</option><option>Water</option><option>Toluene</option><option>Dichloromethane</option></select></div>
+      </div>
+    </div>
+    <div id="rc-out"></div>
+  </div>
+</section>
+
+<!-- ============ 11 ============ -->
+<section id="s11" class="card" data-title="11 · Kuis, glosarium, referensi">
+  <h2>11 · Kuis interaktif</h2>
+  <div id="quiz"></div>
+  <h3 style="margin-top:28px">Glosarium singkat</h3>
+  <div id="glossary" class="grid g3"></div>
+  <h3 style="margin-top:28px">Daftar pustaka</h3>
+  <ol id="refs" class="small"></ol>
+  <p class="small muted">DOI/tautan dapat diklik. Periksa kembali rujukan sebelum dikutip dalam publikasi.</p>
+</section>
+
+    </main>
+  </div>
+</div>
+
+<script src="assets/js/common.js"></script>
+<script src="assets/js/plot.js"></script>
+<script src="assets/js/course-model.js"></script>
+<script src="assets/js/course-a.js"></script>
+<script src="assets/js/course-b.js"></script>
+<script src="assets/js/course-c.js"></script>
+<script src="assets/js/course.js"></script>
+</body>
+</html>

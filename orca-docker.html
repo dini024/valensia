@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ORCA Docker Workbench · DFT Studio</title>
+<meta name="description" content="Kirim, pantau, dan analisis job ORCA di Docker lokal, agen MacBook, atau HPC Slurm.">
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/docker.css">
+</head>
+<body>
+<main class="container" id="app">
+  <section class="hero">
+    <h1>ORCA Docker Workbench</h1>
+    <p class="lead">Kirim input ORCA dari Input Builder ke Docker lokal, agen MacBook, atau HPC (Slurm); pantau log langsung; lalu kirim hasil ke Results Analyzer.</p>
+    <div class="row">
+      <span id="modePill" class="pill warn">Mode DEMO (simulasi)</span>
+      <span id="connPill" class="pill">belum diuji</span>
+    </div>
+  </section>
+
+  <div id="wb" class="card">
+    <div class="tabs" role="tablist">
+      <button class="tab active" data-tab="t-conn">1 · Koneksi</button>
+      <button class="tab" data-tab="t-submit">2 · Submit job</button>
+      <button class="tab" data-tab="t-monitor">3 · Monitor</button>
+      <button class="tab" data-tab="t-results">4 · Hasil</button>
+      <button class="tab" data-tab="t-guide">5 · Panduan</button>
+    </div>
+
+    <!-- 1 KONEKSI -->
+    <div class="tab-panel active" id="t-conn">
+      <div class="callout warn" id="demoNote"><b>Mode DEMO aktif.</b> Tidak ada backend yang dihubungi; job disimulasikan di browser dengan keluaran ORCA <b>contoh</b> (bukan hasil perhitungan nyata). Matikan opsi demo untuk memakai backend sungguhan.</div>
+      <div class="form-grid">
+        <div class="field"><label for="cUrl">URL backend / agent</label><input id="cUrl" type="url" placeholder="http://127.0.0.1:8000"></div>
+        <div class="field"><label for="cKey">API key (X-API-Key)</label><input id="cKey" type="password" autocomplete="off" placeholder="kosong bila tidak diset"></div>
+        <div class="field"><label for="cBackend">Jalur eksekusi</label>
+          <select id="cBackend">
+            <option value="local_docker">local_docker — Docker di mesin backend</option>
+            <option value="local_agent">local_agent — antrean untuk agen MacBook</option>
+            <option value="slurm_brin">slurm_brin — HPC via SSH + Slurm</option>
+          </select></div>
+        <div class="field"><label for="cImage">Image ORCA (opsional)</label><input id="cImage" type="text" placeholder="default dari server: ORCA_IMAGE"></div>
+      </div>
+      <div class="row">
+        <label class="inline-check"><input type="checkbox" id="cDemo"> Mode demo (tanpa backend)</label>
+        <span class="spacer"></span>
+        <button class="btn primary" id="btnTest">Test koneksi</button>
+        <button class="btn" id="btnSave">Simpan</button>
+      </div>
+      <div id="healthOut" class="health"></div>
+      <p class="small muted">API key disimpan di <code>localStorage</code> browser ini saja. Jangan dipakai di komputer bersama.</p>
+    </div>
+
+    <!-- 2 SUBMIT -->
+    <div class="tab-panel" id="t-submit">
+      <div class="grid g2">
+        <div>
+          <div class="row" style="margin-bottom:8px">
+            <button class="btn" id="btnFromBuilder">↧ Muat dari Input Builder</button>
+            <label class="btn" for="fInp" style="margin:0">Unggah .inp</label>
+            <input type="file" id="fInp" accept=".inp,.txt" hidden>
+            <button class="btn" id="btnSample">Contoh</button>
+          </div>
+          <div class="form-grid" style="margin-bottom:10px">
+            <div class="field"><label for="sName">Nama job</label><input id="sName" type="text" value="job"></div>
+            <div class="field"><label for="sInpName">Nama berkas input</label><input id="sInpName" type="text" value="job.inp"></div>
+          </div>
+          <label for="sText">Isi input ORCA</label>
+          <textarea id="sText" rows="16" spellcheck="false" placeholder="! B3LYP def2-SVP Opt Freq&#10;* xyz 0 1&#10;...&#10;*"></textarea>
+        </div>
+        <div>
+          <h3>Sumber daya</h3>
+          <div class="form-grid">
+            <div class="field"><label for="sProcs">nprocs</label><input id="sProcs" type="number" min="1" value="1"></div>
+            <div class="field"><label for="sMem">Memori per core (MB)</label><input id="sMem" type="number" min="100" value="2000"></div>
+            <div class="field"><label for="sWall">Walltime (HH:MM:SS)</label><input id="sWall" type="text" value="24:00:00"></div>
+          </div>
+          <div class="field"><label>Berkas tambahan (mis. .xyz, .gbw awal)</label>
+            <input type="file" id="fExtra" multiple>
+            <div id="extraList" class="small muted"></div></div>
+          <h3>Pemeriksaan input</h3>
+          <ul id="checks" class="checks"></ul>
+          <div class="row">
+            <button class="btn" id="btnPal">Sisipkan %pal / %maxcore</button>
+            <span class="spacer"></span>
+            <button class="btn good" id="btnSubmit">▶ Submit job</button>
+          </div>
+          <div id="submitMsg" class="small" style="margin-top:8px"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3 MONITOR -->
+    <div class="tab-panel" id="t-monitor">
+      <div class="row" style="margin-bottom:10px">
+        <button class="btn" id="btnRefresh">↻ Segarkan</button>
+        <label class="inline-check"><input type="checkbox" id="autoRef" checked> Auto-refresh (3 d)</label>
+        <span class="spacer"></span><span id="monInfo" class="small muted"></span>
+      </div>
+      <div class="tablewrap"><table class="t" id="jobTable"><thead><tr><th>ID</th><th>Nama</th><th>Jalur</th><th>Status</th><th class="num">nprocs</th><th>Dibuat</th><th class="num">Durasi</th><th>Aksi</th></tr></thead><tbody></tbody></table></div>
+      <div class="row" style="margin:14px 0 6px">
+        <h3 style="margin:0">Log: <span id="logJob" class="mono muted">—</span></h3>
+        <span class="spacer"></span>
+        <label class="inline-check">tail <select id="logTail" style="width:auto"><option>100</option><option selected>300</option><option>1000</option><option>5000</option></select></label>
+        <label class="inline-check"><input type="checkbox" id="autoScroll" checked> auto-scroll</label>
+      </div>
+      <pre id="logBox" class="logbox">(pilih job → Log)</pre>
+    </div>
+
+    <!-- 4 HASIL -->
+    <div class="tab-panel" id="t-results">
+      <div class="row" style="margin-bottom:12px">
+        <div class="field" style="margin:0;min-width:260px"><label for="rJob">Job</label><select id="rJob"></select></div>
+        <button class="btn primary" id="btnLoadOut" style="align-self:flex-end">Ambil &amp; analisis .out</button>
+        <button class="btn" id="btnToAnalyzer" style="align-self:flex-end" disabled>→ Kirim ke Results Analyzer</button>
+      </div>
+      <div id="rMsg" class="small muted"></div>
+      <div id="rStats" class="grid g4" style="margin:12px 0"></div>
+      <div id="rFlags" class="chips" style="margin-bottom:12px"></div>
+      <h3>Berkas job</h3>
+      <div class="tablewrap" style="max-height:240px"><table class="t" id="fileTable"><thead><tr><th>Nama</th><th class="num">Ukuran</th><th></th></tr></thead><tbody></tbody></table></div>
+      <p class="small muted">Untuk orbital HOMO/LUMO: ubah <code>.gbw</code> menjadi <code>.molden</code> dengan <code>orca_2mkl job -molden</code>, lalu unggah ke Results Analyzer.</p>
+    </div>
+
+    <!-- 5 PANDUAN -->
+    <div class="tab-panel" id="t-guide">
+      <div class="grid g2">
+        <div>
+          <h3>Langkah cepat</h3>
+          <ol>
+            <li>Tab <b>Koneksi</b>: isi URL backend (mis. <code>http://127.0.0.1:8000</code>), API key, pilih jalur, <i>Test koneksi</i>.</li>
+            <li>Buat input di <a href="input-builder.html">Input Builder</a> → tombol kirim ke Docker, atau tempel/unggah <code>.inp</code> di tab Submit.</li>
+            <li>Periksa peringatan (nprocs, maxcore, berkas koordinat), lalu <b>Submit</b>.</li>
+            <li>Pantau di <b>Monitor</b>; saat <i>done</i>, buka <b>Hasil</b> → analisis → <i>Kirim ke Results Analyzer</i>.</li>
+          </ol>
+          <h3>Jalur</h3>
+          <ul>
+            <li><b>local_docker</b>: backend FastAPI (<code>backend/</code>) menjalankan <code>docker run</code> di mesinnya.</li>
+            <li><b>local_agent</b>: job diantrekan di backend; <code>local-agent/agent.py poll</code> di MacBook mengambilnya. Atau arahkan URL langsung ke <code>http://127.0.0.1:8765</code> (agent <code>serve</code>) dengan jalur <code>local_docker</code>.</li>
+            <li><b>slurm_brin</b>: backend mengirim <code>sbatch</code> via SSH. Partisi/modul diisi di <code>.env</code> backend sesuai dokumentasi cluster Anda.</li>
+          </ul>
+          <h3>ORCA tidak disertakan</h3>
+          <p>Anda perlu lisensi/unduhan ORCA sendiri dan image Docker pribadi. Lihat <code>local-agent/README.md</code>.</p>
+        </div>
+        <div>
+          <h3>Keamanan</h3>
+          <ul>
+            <li>Backend mengeksekusi input yang Anda kirim. Selalu set <code>API_KEY</code>, batasi <code>CORS_ORIGINS</code> ke origin Pages Anda.</li>
+            <li>Halaman <b>HTTPS</b> hanya bisa memanggil backend <b>HTTPS</b>, kecuali <code>localhost</code>/<code>127.0.0.1</code> (Chrome/Firefox). <b>Safari memblokir</b> <code>http://localhost</code> dari halaman HTTPS.</li>
+            <li>API key tersimpan di localStorage; jangan simpan di komputer umum.</li>
+          </ul>
+          <h3>Pemecahan masalah</h3>
+          <dl class="kv" style="grid-template-columns:1fr">
+            <dt>"Failed to fetch"</dt><dd>Backend mati, URL salah, CORS tidak mengizinkan origin ini, atau mixed content (HTTPS→HTTP). Cek konsol browser.</dd>
+            <dt>401</dt><dd>API key salah.</dd>
+            <dt>503 backend tidak tersedia</dt><dd>Docker Desktop belum jalan / Slurm belum dikonfigurasi (lihat Test koneksi).</dd>
+            <dt>Job "failed" tanpa .out</dt><dd>Image tidak ada, atau <code>orca</code> tidak di PATH image. Coba <code>docker run --rm IMAGE which orca</code>.</dd>
+            <dt>ORCA paralel gagal</dt><dd>Perlu path absolut (<code>$(which orca)</code> — sudah dipakai), <code>%pal nprocs</code> sama dengan nprocs, dan MPI terpasang di image.</dd>
+            <dt>Analyzer tidak menerima hasil besar</dt><dd>Hasil sangat besar melebihi kuota localStorage; halaman memakai sessionStorage/IndexedDB, atau unduh <code>.out</code> dan unggah manual.</dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+<script src="assets/js/common.js"></script>
+<script src="assets/js/plot.js"></script>
+<script src="assets/js/docker.js"></script>
+</body>
+</html>

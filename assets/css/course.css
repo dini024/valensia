@@ -1,0 +1,16 @@
+/* course page extras */
+.paper{border:1px solid var(--line);border-radius:12px;padding:14px 16px;background:var(--surface2);display:flex;flex-direction:column;gap:6px}
+.paper h4{margin:0;font-size:.98rem}
+.paper .meta{font-size:.8rem;color:var(--muted)}
+.paper .take{font-size:.88rem}
+.paper a.doi{font-size:.8rem;font-family:var(--mono);word-break:break-all}
+.paper.hide{display:none}
+.quiz-q{border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:12px;background:var(--surface2)}
+.quiz-q label{display:flex;gap:8px;align-items:flex-start;color:var(--ink);font-weight:400;font-size:.95rem;margin:6px 0;cursor:pointer}
+.quiz-q .fb{font-size:.88rem;margin-top:6px}
+.quiz-q.ok{border-color:var(--ok)} .quiz-q.bad{border-color:var(--danger)}
+.gl{border-left:3px solid var(--accent);padding:4px 12px;font-size:.88rem}
+.gl b{display:block}
+.codebox{position:relative}
+.codebox .btn{position:absolute;right:8px;top:8px}
+#toc a.sub{padding-left:22px}

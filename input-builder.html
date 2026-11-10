@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Input Builder ORCA & Gaussian — Quantum Chemistry Lab</title>
+<meta name="description" content="Pembuat file input ORCA dan Gaussian lengkap: optimasi, frekuensi, TDDFT, solvasi, skrip SLURM dan Docker. Berjalan sepenuhnya di browser.">
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/inputbuilder.css">
+</head>
+<body data-page="input">
+<div class="container">
+  <div class="hero" style="padding-bottom:6px">
+    <span class="pill">Langkah 2 · setelah Molecular Builder</span>
+    <h1>Input Builder ORCA &amp; Gaussian</h1>
+    <p class="lead">Atur pekerjaan (optimasi, frekuensi, TDDFT, scan, TS/IRC), fungsional, basis, pelarut, SCF, dan keluaran orbital. File input dan skrip job diperbarui langsung saat Anda mengubah pilihan.</p>
+  </div>
+
+  <div class="ib-layout">
+    <!-- ================= kolom kiri: molekul ================= -->
+    <aside class="ib-side">
+      <div class="card">
+        <h3 style="margin-top:0">Molekul</h3>
+        <div class="field"><label for="mol-name">Nama job</label><input id="mol-name" type="text" placeholder="mis. dye_D5" spellcheck="false"></div>
+        <div class="grid g2" style="margin-top:8px">
+          <div class="field"><label for="mol-charge">Muatan</label><input id="mol-charge" type="number" step="1" value="0"></div>
+          <div class="field"><label for="mol-mult">Multiplisitas</label><input id="mol-mult" type="number" step="1" min="1" value="1"></div>
+        </div>
+        <div id="parity" class="callout hidden" style="margin-top:10px"></div>
+        <div class="row" style="margin-top:10px">
+          <button class="btn primary" id="btn-from-builder" type="button">Muat dari Molecular Builder</button>
+        </div>
+        <div id="mol-drop" class="dropzone" style="margin-top:10px;padding:12px">Seret berkas .xyz / .mol / .sdf ke sini atau klik</div>
+        <div class="field" style="margin-top:10px"><label for="mol-paste">…atau tempel koordinat (XYZ / baris “El x y z”)</label>
+          <textarea id="mol-paste" rows="4" spellcheck="false" placeholder="3&#10;air&#10;O 0 0 0.117&#10;H 0 0.755 -0.471&#10;H 0 -0.755 -0.471"></textarea></div>
+        <div class="row" style="margin-top:6px">
+          <button class="btn sm" id="btn-parse" type="button">Baca koordinat</button>
+          <button class="btn sm example-btn" data-ex="h2o" type="button">H₂O</button>
+          <button class="btn sm example-btn" data-ex="ch2o" type="button">CH₂O</button>
+          <button class="btn sm example-btn" data-ex="benzene" type="button">Benzena</button>
+        </div>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <h3 style="margin-top:0">Ringkasan</h3>
+        <dl class="kv">
+          <dt>Rumus</dt><dd id="sum-formula">—</dd><dt>Jumlah atom</dt><dd id="sum-atoms">—</dd><dt>Elektron</dt><dd id="sum-elec">—</dd>
+          <dt>Massa (g/mol)</dt><dd id="sum-mass">—</dd><dt>Fungsi basis (perkiraan)</dt><dd id="sum-nbf">—</dd>
+        </dl>
+        <div id="viewer3d" class="viewer" style="height:260px;margin-top:10px"><div class="loading">Belum ada molekul</div></div>
+        <div class="row" style="margin-top:8px"><button class="btn sm" id="dl-xyz" type="button">Unduh .xyz</button></div>
+      </div>
+    </aside>
+
+    <!-- ================= kolom kanan: pengaturan + keluaran ================= -->
+    <main class="ib-main">
+      <div class="card">
+        <div class="row" style="align-items:center;margin-bottom:6px"><b>Preset cepat:</b><div id="presets" class="chips"></div></div>
+        <div id="engine-tabs">
+          <div class="tabs" role="tablist">
+            <button class="tab active" data-tab="tab-orca" type="button">ORCA</button>
+            <button class="tab" data-tab="tab-gauss" type="button">Gaussian</button>
+            <button class="tab" data-tab="tab-batch" type="button">Batch</button>
+            <button class="tab" data-tab="tab-scripts" type="button">Skrip job (SLURM / Docker)</button>
+            <button class="tab" data-tab="tab-help" type="button">Bantuan</button>
+          </div>
+
+          <!-- ORCA -->
+          <div id="tab-orca" class="tab-panel active">
+            <div class="ib-split">
+              <div id="orca-form" class="ib-form"></div>
+              <div class="ib-out">
+                <div class="row between"><b>Berkas: <code id="fname-orca">job.inp</code></b>
+                  <span class="row"><button class="btn sm" id="copy-orca" type="button">Salin</button><button class="btn sm primary" id="dl-orca" type="button">Unduh .inp</button></span></div>
+                <pre id="pre-orca" class="codebox" aria-label="Input ORCA"></pre>
+                <div id="val-orca" class="stack" style="margin-top:8px"></div>
+                <div class="row" style="margin-top:10px"><button class="btn" id="send-docker" type="button">Kirim ke ORCA Docker →</button></div>
+                <div class="callout info" style="margin-top:10px"><b>Setelah job selesai</b>, unggah ke Results Analyzer:<ul id="reminder-files" style="margin:.3em 0 0;padding-left:1.2em"></ul></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Gaussian -->
+          <div id="tab-gauss" class="tab-panel">
+            <div class="ib-split">
+              <div id="gauss-form" class="ib-form"></div>
+              <div class="ib-out">
+                <div class="row between"><b>Berkas: <code id="fname-gauss">job.com</code></b>
+                  <span class="row"><button class="btn sm" id="copy-gauss" type="button">Salin</button><button class="btn sm primary" id="dl-gauss" type="button">Unduh .com</button></span></div>
+                <pre id="pre-gauss" class="codebox" aria-label="Input Gaussian"></pre>
+                <div id="val-gauss" class="stack" style="margin-top:8px"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Batch -->
+          <div id="tab-batch" class="tab-panel">
+            <p class="muted">Buat banyak input sekaligus memakai pengaturan di tab ORCA/Gaussian. Tempel beberapa blok XYZ berurutan (baris judul = nama), atau satu baris “nama SMILES” per molekul bila Molecular Builder tersedia, atau muat seri dari Molecular Builder.</p>
+            <div class="row"><label class="check"><input type="radio" name="batch-eng" value="orca" checked> ORCA</label><label class="check"><input type="radio" name="batch-eng" value="gaussian"> Gaussian</label>
+              <button class="btn sm" id="batch-load-series" type="button">Muat seri dari Molecular Builder</button></div>
+            <textarea id="batch-text" rows="8" spellcheck="false" style="margin-top:8px" placeholder="3&#10;air&#10;O 0 0 0.117&#10;H 0 0.755 -0.471&#10;H 0 -0.755 -0.471"></textarea>
+            <div class="row" style="margin:8px 0"><button class="btn primary" id="batch-run" type="button">Hasilkan input</button><span id="batch-count" class="muted small"></span></div>
+            <div id="batch-actions" class="row hidden"><button class="btn sm" id="batch-dl-all" type="button">Unduh semua</button><button class="btn sm" id="batch-dl-sh" type="button">Unduh make_inputs.sh</button></div>
+            <div class="tablewrap" style="margin-top:8px"><table class="data"><thead><tr><th>Nama</th><th>Rumus</th><th class="num">Atom</th><th>Berkas</th><th>Status</th><th></th></tr></thead><tbody id="batch-list"></tbody></table></div>
+            <pre id="batch-preview" class="codebox" style="margin-top:8px;min-height:60px"></pre>
+          </div>
+
+          <!-- Skrip -->
+          <div id="tab-scripts" class="tab-panel">
+            <p class="muted">Skrip pengiriman job untuk HPC (SLURM), Docker, atau mesin lokal. Sesuaikan nama modul/partisi dengan klaster Anda (mis. BRIN) — nama di bawah hanyalah contoh.</p>
+            <div class="grid g3">
+              <div class="field"><label for="s-partition">Partisi SLURM</label><input id="s-partition" type="text"></div>
+              <div class="field"><label for="s-time">Batas waktu (HH:MM:SS)</label><input id="s-time" type="text"></div>
+              <div class="field"><label for="s-job">Nama job (opsional)</label><input id="s-job" type="text"></div>
+              <div class="field"><label for="s-orca-mod">Modul ORCA</label><input id="s-orca-mod" type="text"></div>
+              <div class="field"><label for="s-gauss-mod">Modul Gaussian</label><input id="s-gauss-mod" type="text"></div>
+              <div class="field"><label for="s-image">Image Docker ORCA</label><input id="s-image" type="text"></div>
+            </div>
+            <div class="grid g2" style="margin-top:12px">
+              <div><div class="row between"><b>SLURM · ORCA</b><span class="row"><button class="btn sm" data-copy-target="script-slurm-orca" type="button">Salin</button><button class="btn sm" data-dl-target="script-slurm-orca" data-dl-name="{n}_orca.slurm" type="button">Unduh</button></span></div><pre id="script-slurm-orca" class="codebox"></pre></div>
+              <div><div class="row between"><b>SLURM · Gaussian</b><span class="row"><button class="btn sm" data-copy-target="script-slurm-gauss" type="button">Salin</button><button class="btn sm" data-dl-target="script-slurm-gauss" data-dl-name="{n}_g16.slurm" type="button">Unduh</button></span></div><pre id="script-slurm-gauss" class="codebox"></pre></div>
+              <div><div class="row between"><b>Docker</b><span class="row"><button class="btn sm" data-copy-target="script-docker" type="button">Salin</button><button class="btn sm" data-dl-target="script-docker" data-dl-name="{n}_docker.sh" type="button">Unduh</button></span></div><pre id="script-docker" class="codebox"></pre></div>
+              <div><div class="row between"><b>Lokal</b><span class="row"><button class="btn sm" data-copy-target="script-local" type="button">Salin</button><button class="btn sm" data-dl-target="script-local" data-dl-name="{n}_local.sh" type="button">Unduh</button></span></div><pre id="script-local" class="codebox"></pre></div>
+            </div>
+          </div>
+
+          <!-- Bantuan -->
+          <div id="tab-help" class="tab-panel">
+            <h3 style="margin-top:0">Alur kerja yang disarankan untuk zat warna DSSC</h3>
+            <ol>
+              <li><b>Opt + Freq</b> (mis. B3LYP-D3BJ/def2-SVP + CPCM): pastikan tidak ada frekuensi imajiner.</li>
+              <li><b>TDDFT</b> pada geometri hasil optimasi (mis. CAM-B3LYP atau ωB97X-D3 dengan def2-TZVP, NRoots ≥ 10–20, pelarut sesuai).</li>
+              <li>Aktifkan <b>keluaran orbital</b>: ORCA → jalankan <code>orca_2mkl nama -molden</code>; Gaussian → aktifkan <code>%chk</code> lalu <code>formchk nama.chk nama.fchk</code>.</li>
+              <li>Unggah <code>.out/.log</code> (+ <code>.molden.input</code> / <code>.fchk</code>) ke <a href="results-analyzer.html">Results Analyzer</a>.</li>
+            </ol>
+            <div class="callout warn"><b>Catatan:</b> preset hanyalah titik awal yang umum dipakai, bukan jaminan kecocokan untuk sistem Anda. Validasi fungsional/basis terhadap data eksperimen atau metode yang lebih tinggi. Periksa sintaks terhadap manual versi ORCA/Gaussian yang Anda pakai.</div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+<div id="site-footer"></div>
+<script src="assets/js/common.js"></script>
+<script src="assets/js/inputbuilder.js"></script>
+</body>
+</html>

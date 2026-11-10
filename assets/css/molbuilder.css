@@ -1,0 +1,15 @@
+.mb-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;align-items:start}
+.mb-right{position:sticky;top:76px}
+.card.inner{box-shadow:none;background:var(--surface2);margin-bottom:16px}
+.depict{background:#fff;border:1px solid var(--line);border-radius:10px;min-height:150px;display:flex;align-items:center;justify-content:center;padding:6px;overflow:auto}
+.depict svg{max-width:100%;height:auto}
+.mbview{height:340px}
+.lib-res{display:flex;flex-direction:column;gap:4px;max-height:260px;overflow:auto;margin-top:8px}
+.lib-item{display:flex;gap:10px;align-items:baseline;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);cursor:pointer;text-align:left;font:inherit;color:var(--ink);width:100%}
+.lib-item:hover{border-color:var(--accent)}
+.lib-item b{white-space:nowrap}
+.lib-item span{color:var(--muted);font-family:var(--mono);font-size:.78rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.mini-svg svg{width:90px;height:60px;background:#fff;border-radius:6px}
+.handoff-sum{margin:8px 0 14px}
+#desc{margin:10px 0 0}
+@media (max-width:900px){.mb-layout{grid-template-columns:1fr}.mb-right{position:static}}

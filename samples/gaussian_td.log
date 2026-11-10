@@ -1,0 +1,52 @@
+ ****** DATA CONTOH (DUMMY) - bukan hasil produksi Gaussian. Format meniru Gaussian 16; angka dari PySCF B3LYP/def2-SVP formaldehida ******
+ Entering Gaussian System, Link 0=g16
+ Gaussian 16:  ES64L-G16RevC.01 3-Jul-2019
+ ----------------------------------------------------------------------
+ # td=(nstates=8) b3lyp/def2svp
+ ----------------------------------------------------------------------
+ Symbolic Z-matrix:
+ Charge =  0 Multiplicity = 1
+                         Standard orientation:                         
+ ---------------------------------------------------------------------
+ Center     Atomic      Atomic             Coordinates (Angstroms)
+ Number     Number       Type             X           Y           Z
+ ---------------------------------------------------------------------
+      1          6           0       -0.000000    0.000032    0.004895
+      2          8           0       -0.000000    0.000051    1.204641
+      3          1           0        0.000000    0.944719   -0.598786
+      4          1           0       -0.000000   -0.944702   -0.598729
+ ---------------------------------------------------------------------
+ Alpha  occ. eigenvalues -- -19.15405 -10.29037  -1.05378  -0.62656  -0.49553
+ Alpha  occ. eigenvalues --  -0.45228  -0.40645  -0.27103
+ Alpha virt. eigenvalues --  -0.04653   0.06652   0.13212   0.19527   0.44103
+ Alpha virt. eigenvalues --   0.45130   0.54071   0.58563   0.60711   0.66037
+ Alpha virt. eigenvalues --   0.88019   0.98397   1.09400   1.16239   1.28471
+ Alpha virt. eigenvalues --   1.43057   1.54487   1.60864   1.79716   1.84365
+ Alpha virt. eigenvalues --   1.90748   2.06212   2.48531   2.56662   2.58255
+ Alpha virt. eigenvalues --   2.68780   2.88693   3.12831   3.40306   3.56109
+          SCF Done:  E(RB3LYP) =  -114.415497675     A.U. after    9 cycles
+ Excitation energies and oscillator strengths:
+
+ Excited State   1:      Singlet-A      4.0549 eV  305.77 nm  f=0.0000  <S**2>=0.000
+        8 ->  9          0.70694
+ This state for optimization and/or second-order correction.
+ Excited State   2:      Singlet-A      8.1775 eV  151.62 nm  f=0.1520  <S**2>=0.000
+        8 -> 10          0.70616
+ Excited State   3:      Singlet-A      9.1708 eV  135.19 nm  f=0.0014  <S**2>=0.000
+        6 ->  9          0.70598
+ Excited State   4:      Singlet-A      9.5278 eV  130.13 nm  f=0.0000  <S**2>=0.000
+        8 -> 11          0.50894
+        7 ->  9          0.48150
+ Excited State   5:      Singlet-A      10.2050 eV  121.49 nm  f=0.0000  <S**2>=0.000
+        5 ->  9          0.70598
+ Excited State   6:      Singlet-A      11.0303 eV  112.40 nm  f=0.4467  <S**2>=0.000
+        7 ->  9          0.49430
+        8 -> 11          0.47979
+        6 -> 10          0.10687
+ Excited State   7:      Singlet-A      11.0793 eV  111.91 nm  f=0.0096  <S**2>=0.000
+        8 -> 12          0.70628
+ Excited State   8:      Singlet-A      11.6036 eV  106.85 nm  f=0.0022  <S**2>=0.000
+        7 -> 10          0.70312
+
+ Job cpu time:       0 days  0 hours  1 minutes  5.0 seconds.
+ Normal termination of Gaussian 16 at Fri Nov  6 08:57:00 2026.
